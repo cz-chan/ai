@@ -1,0 +1,26 @@
+{
+	"name": "rag",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"dev": "node --env-file=.env src/index.ts",
+		"start": "node --env-file=.env src/index.ts",
+		"review": "node --env-file=.env src/exercises/code-reviewer.ts",
+		"ingest": "node --env-file=.env src/rag/ingest.ts",
+		"demo": "node --env-file=.env src/agent/demo.ts"
+	},
+	"dependencies": {
+		"@anthropic-ai/sdk": "1.3.0",
+		"openai": "7.45.1"
+	},
+	"devDependencies": {
+		"@types/node": "26.6.6"
+	},
+	"keywords": [],
+	"author": {
+		"name": "cz",
+		"url": "https://c12z.io"
+	},
+	"license": "ISC"
+}
