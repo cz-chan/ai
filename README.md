@@ -1,1 +1,1 @@
-# ai
+# qué es este directorio
