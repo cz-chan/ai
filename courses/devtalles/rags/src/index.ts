@@ -24,10 +24,10 @@ const anthropicAnswer = async (
 ): Promise<void> => {
 	if (systemPrompt) {
 		const answer = await askClaude(question, systemPrompt);
-		console.log("WITH SYSTEM PROMPT", answer);
+		console.log("WITH SYSTEM PROMPT\n", answer);
 	} else {
 		const answer = await askClaude(question);
-		console.log("WITHOUT SYSTEM PROMPT", answer);
+		console.log("WITHOUT SYSTEM PROMPT\n", answer);
 	}
 };
 
@@ -39,11 +39,10 @@ async function main(): Promise<void> {
 	console.log("✅ DevAssistant configurado correctamente");
 	console.log("");
 	console.log("");
-	const question =
-		"¿cuál es la diferencia entre nodejs y go para el backend? responde en 3 bulleted pints y se conciso.";
-	console.log("claude response SIN SYSTEM PROMPT:");
+	// const question =
+	// 	"¿cuál es la diferencia entre nodejs y go para el backend? responde en 3 bulleted pints y se conciso.";
+
 	await anthropicAnswer(BAD_CODE);
-	console.log("claude response CON SYSTEM PROMPT: \n");
 	await anthropicAnswer(BAD_CODE, CODE_REVIEWER_PROMPT);
 }
 

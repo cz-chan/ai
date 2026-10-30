@@ -11,7 +11,7 @@ export async function askClaude(
 ): Promise<string> {
 	const response = await anthropicClient.messages.create({
 		model: configLLM.model,
-		max_tokens: 1024,
+		max_tokens: 1024, // por culpa de esto pueden haber respuestas que se corten
 		messages: [
 			{
 				role: "user",
