@@ -1,10 +1,35 @@
 import { configLLM } from "./config.ts";
 import { askClaude } from "./llm/anthropic.ts";
+import { CODE_REVIEWER_PROMPT } from "./llm/prompts.ts";
 
-const anthropicAnswer = async (question: string): Promise<void> => {
-	const answer = await askClaude(question);
+const BAD_CODE = `
+async function getUser(id) {
+  const query = "SELECT * FROM users WHERE id = " + id;
+  const result = await db.query(query);
+  return result[0];
+}
+function calcularDescuento(precio, tipo) {
+  if (tipo == "vip") {
+    return precio * 0.8;
+  } else if (tipo == "regular") {
+    return precio * 0.9;
+  } else {
+    return precio;
+  }
+}
+`;
 
-	console.log(answer);
+const anthropicAnswer = async (
+	question: string,
+	systemPrompt?: string,
+): Promise<void> => {
+	if (systemPrompt) {
+		const answer = await askClaude(question, systemPrompt);
+		console.log("WITH SYSTEM PROMPT", answer);
+	} else {
+		const answer = await askClaude(question);
+		console.log("WITHOUT SYSTEM PROMPT", answer);
+	}
 };
 
 async function main(): Promise<void> {
@@ -22,8 +47,10 @@ async function main(): Promise<void> {
 	console.log("");
 	const question =
 		"¿cuál es la diferencia entre nodejs y go para el backend? responde en 3 bulleted pints y se conciso.";
-	console.log("claude response:");
-	anthropicAnswer(question);
+	console.log("claude response SIN SYSTEM PROMPT:");
+	await anthropicAnswer(BAD_CODE);
+	console.log("claude response CON SYSTEM PROMPT: \n");
+	await anthropicAnswer(BAD_CODE, CODE_REVIEWER_PROMPT);
 }
 
 main();
