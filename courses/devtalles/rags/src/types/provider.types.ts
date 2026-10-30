@@ -1,5 +1,5 @@
 // proveedores disponibles (existe en runtime, el tipo se deriva de aquí)
-export const providers = {
+export const llmProviders = {
 	anthropic: "anthropic",
 	openai: "openai",
 	deepseek: "deepseek",
@@ -7,13 +7,21 @@ export const providers = {
 	minimax: "minimax",
 } as const;
 
-export type ModelProvider = (typeof providers)[keyof typeof providers];
+export const embeddingProviders = {
+	openai: "openai",
+	voyage: "voyage",
+} as const;
+
+export type LLMProvider = (typeof llmProviders)[keyof typeof llmProviders];
+export type EmbeddingProvider =
+	(typeof embeddingProviders)[keyof typeof embeddingProviders];
 
 // lista para validar y mostrar en errores
-export const MODEL_PROVIDERS = Object.values(providers);
+export const MODEL_PROVIDERS = Object.values(llmProviders);
+export const EMBEDDING_PROVIDERS = Object.values(embeddingProviders);
 
 export interface AppConfig {
-	provider: ModelProvider;
+	provider: LLMProvider;
 	apiKey: string;
 	model: string;
 	docsPath: string;
@@ -21,13 +29,15 @@ export interface AppConfig {
 	ragTopK: number;
 }
 
-export interface EmbeddingConfig extends AppConfig {
-	embeddingModel: string;
-}
-
 export interface AgentResponse {
 	text: string;
 	toolsUse: string[];
 	inputTokens: number;
 	outputTokens: number;
+}
+
+export interface EmbeddingConfig {
+	provider: EmbeddingProvider;
+	apiKey: string;
+	model: string;
 }
