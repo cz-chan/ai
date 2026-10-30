@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { configLLM } from "../config.ts";
+import { configLLM } from "../../config.ts";
 
 // recuerda que para cambiar el modelo, necesitas hacerlo desde la variable maestra config
 // y desde ella ya todo lo demás estará conectado
