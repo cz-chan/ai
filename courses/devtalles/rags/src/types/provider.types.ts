@@ -4,6 +4,7 @@ export const MODEL_PROVIDERS = [
 	"openai",
 	"deepseek",
 	"moonshot",
+	"minimax",
 ] as const;
 
 export type ModelProvider = (typeof MODEL_PROVIDERS)[number];
