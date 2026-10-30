@@ -1,5 +1,10 @@
 // lista de proveedores disponibles (existe en runtime, el tipo se deriva de aquí)
-export const MODEL_PROVIDERS = ["anthropic", "openai", "deepseek", "moonshot"] as const;
+export const MODEL_PROVIDERS = [
+	"anthropic",
+	"openai",
+	"deepseek",
+	"moonshot",
+] as const;
 
 export type ModelProvider = (typeof MODEL_PROVIDERS)[number];
 
@@ -9,7 +14,7 @@ export interface AppConfig {
 	model: string;
 	docsPath: string;
 	dbPath: string;
-	rangTopK: number;
+	ragTopK: number;
 }
 
 export interface EmbeddingConfig extends AppConfig {
