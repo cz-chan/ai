@@ -44,4 +44,4 @@ function createConfig(provider: ModelProvider): AppConfig {
 }
 
 // cambia aquí el proveedor activo
-export const config = createConfig(providers.anthropic);
+export const setProvider = createConfig(providers.anthropic);
