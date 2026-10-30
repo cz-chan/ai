@@ -1,8 +1,12 @@
 import {
+	EMBEDDING_PROVIDERS,
 	MODEL_PROVIDERS,
-	providers,
+	embeddingProviders,
+	llmProviders,
 	type AppConfig,
-	type ModelProvider,
+	type EmbeddingConfig,
+	type EmbeddingProvider,
+	type LLMProvider,
 } from "./types/provider.types.ts";
 
 // fución para validar que las envs existen
@@ -18,7 +22,7 @@ function getRequiredEnvVar(name: string, defaultValue?: string): string {
 
 // valida el proveedor y sus envs al momento de elegirlo
 // prefijo de las envs del proveedor: "moonshot" -> "MOONSHOT"
-function createConfig(provider: ModelProvider): AppConfig {
+function createConfig(provider: LLMProvider): AppConfig {
 	if (!(MODEL_PROVIDERS as readonly string[]).includes(provider)) {
 		throw new Error(
 			`Invalid provider "${provider}". Must be one of: ${MODEL_PROVIDERS.join(", ")}`,
@@ -43,5 +47,23 @@ function createConfig(provider: ModelProvider): AppConfig {
 	};
 }
 
+// valida el embedding provider
+function createEmbeddingConfig(provider: EmbeddingProvider): EmbeddingConfig {
+	if (!(EMBEDDING_PROVIDERS as readonly string[]).includes(provider)) {
+		throw new Error(
+			`Invalid embedding provider "${provider}". Must be one of: ${EMBEDDING_PROVIDERS.join(", ")}`,
+		);
+	}
+
+	const prefix = provider.toUpperCase();
+
+	return {
+		provider,
+		apiKey: getRequiredEnvVar(`${prefix}_API_KEY`),
+		model: getRequiredEnvVar(`${prefix}_EMBEDDING_MODEL`),
+	};
+}
+
 // cambia aquí el proveedor activo
-export const setProvider = createConfig(providers.anthropic);
+export const configLLM = createConfig(llmProviders.anthropic);
+export const configEmbedding = createEmbeddingConfig(embeddingProviders.openai);
