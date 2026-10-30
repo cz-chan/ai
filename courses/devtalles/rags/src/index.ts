@@ -1,6 +1,13 @@
 import { configLLM } from "./config.ts";
+import { askClaude } from "./llm/anthropic.ts";
 
-function main(): void {
+const anthropicAnswer = async (question: string): Promise<void> => {
+	const answer = await askClaude(question);
+
+	console.log(answer);
+};
+
+async function main(): Promise<void> {
 	console.log("╔════════════════════════════════════════╗");
 	console.log("║        DevAssistant - Curso IA         ║");
 	console.log("╚════════════════════════════════════════╝");
@@ -13,7 +20,10 @@ function main(): void {
 	console.log(`   • Docs path: ${configLLM.dbPath}`);
 	console.log(`   • RAG top-K: ${configLLM.ragTopK}`);
 	console.log("");
-	console.log("🚀 Próximo paso: Sección 3 — Primera llamada a Claude API");
+	const question =
+		"¿cuál es la diferencia entre nodejs y go para el backend? responde en 3 bulleted pints y se conciso.";
+	console.log("claude response:");
+	anthropicAnswer(question);
 }
 
 main();
