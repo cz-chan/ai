@@ -68,8 +68,9 @@ export class Conversation {
 			...(this.state.systemPrompt && { system: this.state.systemPrompt }),
 		});
 
-		this.state.totalInputTokens += response.usage.input_tokens;
-		this.state.totalOutputTokens += response.usage.output_tokens;
+		// añadimos al addUsage los tokens que se van consumiendo y además, creamos una fucnión por si no se llama
+		// al send que se pueda usar (ojo, lo que se le pasa al addUsage es lo que ha consumido la RESPONSE)
+		this.addUsage(response.usage.input_tokens, response.usage.output_tokens);
 
 		// lo que buscamos en este punto, por ahora, es devolver el texto (la respuesta que nos da claude)
 		const textBlock = response.content.find((block) => block.type === "text");
@@ -81,6 +82,12 @@ export class Conversation {
 		this.addAssistantMessage(responseText);
 
 		return responseText;
+	}
+
+	// función para añadir usage por si alguien no llama al send (por ejemplo en el stream del cli.ts)
+	addUsage(input_tokens: number, output_tokens: number): void {
+		this.state.totalInputTokens += input_tokens;
+		this.state.totalOutputTokens += output_tokens;
 	}
 
 	getUsage(): { input_usage: number; output_usage: number } {
