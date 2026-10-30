@@ -1,13 +1,16 @@
-// lista de proveedores disponibles (existe en runtime, el tipo se deriva de aquí)
-export const MODEL_PROVIDERS = [
-	"anthropic",
-	"openai",
-	"deepseek",
-	"moonshot",
-	"minimax",
-] as const;
+// proveedores disponibles (existe en runtime, el tipo se deriva de aquí)
+export const providers = {
+	anthropic: "anthropic",
+	openai: "openai",
+	deepseek: "deepseek",
+	moonshot: "moonshot",
+	minimax: "minimax",
+} as const;
 
-export type ModelProvider = (typeof MODEL_PROVIDERS)[number];
+export type ModelProvider = (typeof providers)[keyof typeof providers];
+
+// lista para validar y mostrar en errores
+export const MODEL_PROVIDERS = Object.values(providers);
 
 export interface AppConfig {
 	provider: ModelProvider;
