@@ -1,4 +1,4 @@
-import { config } from "./config.ts";
+import { configLLM } from "./config.ts";
 
 function main(): void {
 	console.log("╔════════════════════════════════════════╗");
@@ -8,10 +8,10 @@ function main(): void {
 	console.log("✅ DevAssistant configurado correctamente");
 	console.log("");
 	console.log("📋 Configuración activa:");
-	console.log(`   • Provider: ${config.provider}`);
-	console.log(`   • Modelo: ${config.model}`);
-	console.log(`   • Docs path: ${config.dbPath}`);
-	console.log(`   • RAG top-K: ${config.ragTopK}`);
+	console.log(`   • Provider: ${configLLM.provider}`);
+	console.log(`   • Modelo: ${configLLM.model}`);
+	console.log(`   • Docs path: ${configLLM.dbPath}`);
+	console.log(`   • RAG top-K: ${configLLM.ragTopK}`);
 	console.log("");
 	console.log("🚀 Próximo paso: Sección 3 — Primera llamada a Claude API");
 }
