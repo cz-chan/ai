@@ -3,6 +3,7 @@ import { Conversation } from "./conversation.ts";
 import { configLLM } from "../config.ts";
 import { anthropicClient } from "../llm/anthropic/anthropic.ts";
 import { DOCUMENTATION_ASSISTANT_PROMPT } from "../llm/prompts.ts";
+import { TOOL_DEFINITIONS } from "../tools/definitions.ts";
 
 export async function startCLI(): Promise<void> {
 	const rl = readline.createInterface({
@@ -17,7 +18,7 @@ export async function startCLI(): Promise<void> {
 	});
 
 	console.log("💬 Escribe tu pregunta y presiona Enter.");
-	console.log("   Comandos: /clear, /stats, /exit");
+	console.log("   Comandos: /clear, /stats, /tools, /exit");
 
 	const promptUser = async (): Promise<void> => {
 		const userInput = (await rl.question("Tu: ")).trim();
@@ -38,6 +39,7 @@ export async function startCLI(): Promise<void> {
 			promptUser();
 			return;
 		}
+
 		if (userInput === "/clear" || userInput === "/new") {
 			conversation.softReset();
 
@@ -46,6 +48,19 @@ export async function startCLI(): Promise<void> {
 			promptUser();
 			return;
 		}
+
+		if (userInput === "/tools") {
+			console.log(`\nTools disponibles (${TOOL_DEFINITIONS.length}):`);
+			for (const tool of TOOL_DEFINITIONS) {
+				const params = Object.keys(tool.input_schema.properties).join(", ");
+				console.log(`   • ${tool.name}(${params})`);
+				console.log(`     ${tool.description.split(".")[0]}.`);
+			}
+			console.log("");
+			promptUser();
+			return;
+		}
+
 		if (userInput === "/exit") {
 			const stats = conversation.getStats();
 			console.log(
