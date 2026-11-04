@@ -4,6 +4,7 @@ import { configLLM } from "../config.ts";
 import { anthropicClient } from "../llm/anthropic/anthropic.ts";
 import { DOCUMENTATION_ASSISTANT_PROMPT } from "../llm/prompts.ts";
 import { TOOL_DEFINITIONS } from "../tools/definitions.ts";
+import { runWithTools } from "../tools/agent-loop.ts";
 
 export async function startCLI(): Promise<void> {
 	const rl = readline.createInterface({
@@ -81,42 +82,58 @@ export async function startCLI(): Promise<void> {
 			// 1º: enviamos lo que ha mandado el user
 			conversation.addUserMessage(userInput);
 
-			// 2º: mandamos la respuesta de claude
-			process.stdout.write("\n Claude: ");
-
-			// construimos el historial de claude
-			const record = conversation.getHistory();
-
-			// lógica del stream
-			let fullMessage: string = ""; // mensaje completo
-
-			const stream = anthropicClient.messages.stream({
-				// stream de los mensajes para nosotros verlo de mejor manera
-				model: configLLM.model,
-				max_tokens: 1024,
-				system: DOCUMENTATION_ASSISTANT_PROMPT,
-				messages: record,
-			});
-
-			// después del stream, mostramos el mensaje final
-			stream.on("text", (chunk) => {
-				process.stdout.write(chunk);
-				fullMessage += chunk; // añadir chunk al fullMesg
-			});
-
-			// 3º:  mostrar el mensaje final
-			const finalMessage = await stream.finalMessage();
-
-			// añadimos el usage del finalMessage
-			conversation.addUsage(
-				finalMessage.usage.input_tokens,
-				finalMessage.usage.output_tokens,
+			// configuración de las tools en la conversación
+			const response = await runWithTools(
+				userInput,
+				DOCUMENTATION_ASSISTANT_PROMPT,
+				TOOL_DEFINITIONS,
 			);
 
-			process.stdout.write("\n");
+			// 2º: mandamos la respuesta de claude
+			process.stdout.write(`\n Claude: ${response}\n\n`);
+
+			/*
+				lo que hay aquí dentro era para usar el streaming
+				pero al tener ahora las tools, no se va a hacer igual.
+
+				lo dejo dentro de este comentario para la posteridad
+				y poder revisarlo en algún momento
+
+				// construimos el historial de claude
+				const record = conversation.getHistory();
+	
+				// lógica del stream
+				let fullMessage: string = ""; // mensaje completo
+	
+				const stream = anthropicClient.messages.stream({
+					// stream de los mensajes para nosotros verlo de mejor manera
+					model: configLLM.model,
+					max_tokens: 1024,
+					system: DOCUMENTATION_ASSISTANT_PROMPT,
+					messages: record,
+				});
+	
+				// después del stream, mostramos el mensaje final
+				stream.on("text", (chunk) => {
+					process.stdout.write(chunk);
+					fullMessage += chunk; // añadir chunk al fullMesg
+				});
+	
+				// 3º:  mostrar el mensaje final
+				const finalMessage = await stream.finalMessage();
+	
+				// añadimos el usage del finalMessage
+				conversation.addUsage(
+					finalMessage.usage.input_tokens,
+					finalMessage.usage.output_tokens,
+				);
+	
+				process.stdout.write("\n");
+
+			*/
 
 			// guardamos la respuesta para el sigyuiente turno y así tenga esa memoria
-			conversation.addAssistantMessage(fullMessage);
+			conversation.addAssistantMessage(response);
 
 			// con el finalMessage, puedes ver los tokens en general que ha consumido
 		} catch (error) {
