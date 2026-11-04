@@ -34,5 +34,3 @@ export const generateEmbeddings = async (
 
 	return response.data.map((item) => item.embedding);
 };
-
-//https://link.excalidraw.com/readonly/aEvBleqpdC5dj5rVlgpv?darkMode=true
