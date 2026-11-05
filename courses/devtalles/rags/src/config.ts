@@ -65,5 +65,5 @@ function createEmbeddingConfig(provider: EmbeddingProvider): EmbeddingConfig {
 }
 
 // cambia aquí el proveedor activo
-export const configLLM = createConfig(llmProviders.openai);
+export const configLLM = createConfig(llmProviders.anthropic);
 export const configEmbedding = createEmbeddingConfig(embeddingProviders.openai);
