@@ -190,7 +190,8 @@ export class VectorStore {
 			serializeEmbedding(queryEmbedding),
 			topK,
 		) as SearchRow[];
-		rows.map((row) => ({
+
+		return rows.map((row) => ({
 			chunk: {
 				id: row.id,
 				content: row.content,
