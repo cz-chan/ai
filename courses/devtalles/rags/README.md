@@ -153,3 +153,9 @@ Uso: `generateText({ model: await getModel(), prompt })`. Con dynamic import sol
 - **Facturación:** unos usan tus keys (Cloudflare, LiteLLM, Portkey, Helicone) y otros te cobran ellos (OpenRouter, Vercel).
 - **Compatibilidad:** casi todos exponen una API compatible con OpenAI, así que con el SDK `openai` + `baseURL` sirven todos.
 - **Funciones de Claude:** caching y thinking a veces se pierden si el gateway traduce a formato OpenAI. LiteLLM, Cloudflare y Portkey dejan pasar el formato nativo de Anthropic.
+
+---
+
+## assets
+
+- [Gist sobre sqlite](https://gist.github.com/pazteddy/cf3b5e97f89f6906e538402453313b3e)
