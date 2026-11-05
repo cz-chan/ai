@@ -21,6 +21,7 @@ const MAX_CHUNCK_SIZE = 2000;
   https://link.excalidraw.com/readonly/aEvBleqpdC5dj5rVlgpv?darkMode=true
 */
 
+// lógica del pipeline de rag
 export const chunkMarkdown = (content: string, filePath: string): Chunk[] => {
 	const fileName = path.basename(filePath);
 
@@ -41,7 +42,7 @@ export const chunkMarkdown = (content: string, filePath: string): Chunk[] => {
 		const heading = isHeading ? firstLine.trim() : "(intro)";
 
 		// caso de uso 1: cuanod una sección cabe en un chunk
-		if (section.length >= MAX_CHUNCK_SIZE) {
+		if (section.length <= MAX_CHUNCK_SIZE) {
 			// añades el último párrafo al chunk
 			const chunkContent = lastParagraph
 				? `${lastParagraph}\n\n${section.trim()}`
@@ -60,8 +61,8 @@ export const chunkMarkdown = (content: string, filePath: string): Chunk[] => {
 			});
 
 			// guardas el ultimo párrafo para el siguiente chunk
-			// lo vas a buscar a través del doble espacio que has puesto en chunkContent
-			const paragraphs = section.trim().split(/\n\n/);
+			// lo vas a buscar a través del doble espacio y el +
+			const paragraphs = section.trim().split(/\n\n+/);
 			lastParagraph = paragraphs[paragraphs.length - 1] ?? "";
 			globalPosition++;
 			continue;
@@ -69,6 +70,87 @@ export const chunkMarkdown = (content: string, filePath: string): Chunk[] => {
 
 		// sección para cuando un paragraph supera el maxchunksize y
 		// tienees que subdividr por párrafos manteniendo el overlap entre
-		// cada chunk
+		// cada chunk y el heading padre con tal de no perder el contexto
+		// pero lo primero que hago es quitar el heading para que en el primer
+		// chunck de cada sección no aparezca suplicado este heading
+		// ya que estría cogiendo la sección primera + heading y después
+		// añadirle el heading en el bucle for de más abajo
+
+		const bodyWithoutHeading = isHeading // esta const hace que el body sea todo lo que está de la línea 1 en adelante, quita el
+			? // heading (linea 0) y hace el trim pq el contenido de la linea 1 es un espacio
+				lines.slice(1).join("\n").trim()
+			: section.trim();
+
+		const paragrphs = bodyWithoutHeading
+			.split(/\n\n+/) // buscas por el doble salto y el +
+			.filter((p) => p.trim().length > 0); // coges los paragraph con length mayor a cer
+
+		let currentChunk = lastParagraph ? `${lastParagraph}\n\n` : "";
+
+		for (let index = 0; index < paragrphs.length; index++) {
+			const paragraph = paragrphs[index] ?? "";
+
+			// el if consigue que los chunks vacios y aquellos que al sumar el currentChunk
+			// que ya tenías y le añades el nuevo párrrafo superan el chunk size, se cree
+			// un nuevo chunk
+			if (
+				currentChunk.length > 0 &&
+				currentChunk.length + paragraph.length > MAX_CHUNCK_SIZE
+			) {
+				// aseguras de que incluyes el heading (el primer chunk de cada seccióntendría
+				// una duplicidad del heading)
+				const chunkContent = isHeading
+					? `${heading}\n\n${currentChunk.trim()}`
+					: currentChunk.trim();
+
+				// hacemos el push del chunkContent
+				chunks.push({
+					id: `${fileName}-${globalPosition}`,
+					contet: chunkContent,
+					metadata: {
+						source: fileName,
+						heading: heading,
+						position: globalPosition,
+						charCount: chunkContent.length,
+					},
+				});
+
+				// cada párrafo está ente doble salto y +
+				// aquí haces que el último parrafo del chunk se convierta
+				// en el inicio del siguiente
+				const chunkParagraph = currentChunk.trim().split(/\n\n+/); // buscas los que tienes
+				lastParagraph = chunkParagraph[chunkParagraph.length - 1] ?? ""; // cogues el último
+				currentChunk = `${lastParagraph}\n\n`; // añades el que has cogido al último
+				globalPosition++;
+			}
+
+			currentChunk += paragraph + "\n\n";
+		}
+
+		// esto lo que hace es añadir el último chunk residual que querdaría enel currentChunk
+		// en el caso de que no haya cabido en los chunk anteriores por el límite de max size
+		if (currentChunk.trim().length > 0) {
+			const chunkContent = isHeading
+				? `${heading}\n\n${currentChunk.trim()}`
+				: currentChunk.trim();
+
+			// hacemos el push del chunkContent
+			chunks.push({
+				id: `${fileName}-${globalPosition}`,
+				contet: chunkContent,
+				metadata: {
+					source: fileName,
+					heading: heading,
+					position: globalPosition,
+					charCount: chunkContent.length,
+				},
+			});
+
+			const finalParagraph = currentChunk.trim().split(/\n\n+/); // buscas los que tienes
+			lastParagraph = finalParagraph[finalParagraph.length - 1] ?? ""; // cogues el último
+			globalPosition++;
+		}
 	}
+
+	return chunks;
 };
