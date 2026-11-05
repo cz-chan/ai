@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import * as sqliteVec from "sqlite-vec";
 import * as path from "path";
 import * as fs from "fs";
+import type { Chunk } from "../types/rag.types.ts";
 
 /*
   usamos una db de SQLite para facilitar la vida y que esté en local pero por lo genral, 
@@ -120,5 +121,42 @@ export class VectorStore {
         embedding float[1536]
       )
       `);
+	}
+
+	insert(chunk: Chunk, embedding: number[]): void {
+		/*
+      sentencia sql para insertar en la db
+
+      vamos a usar insert or replace para hacerlo idempotente y no tener
+      datos duplicados (en el caso de ser iguales, los sustituye)
+
+      los valores de las columnas deben ser los mismos que los de la table chunks (es la mimsa)
+      y los values lo pasamos como. '?' (son 6, igual que columns) porque los vamos a ir
+      rellenando con forme se corre la sentancia (tienen que ser en el mismo orden la inserción
+      que como están nombradas las columnas)
+    */
+		const insertChunk = this.db.prepare(`
+        INSERT OR REPLACE INTO chunks(id, content, source, heading, position, char_count)
+          VALUES(?,?,?,?,?,?)
+      `);
+
+		//! OJO: tienes que correrlos en el mismo orden que los estás nombrando
+		insertChunk.run(
+			chunk.id,
+			chunk.content,
+			chunk.metadata.source,
+			chunk.metadata.heading,
+			chunk.metadata.position,
+			chunk.metadata.charCount,
+		);
+
+		// inserción el embedding serializado en la tabla vectorial
+		const insertEmbedding = this.db.prepare(`
+        INSERT OR REPLACE INTO chunk_embeddings
+        (chunk_id, embedding)
+          VALUES(?,?)
+      `);
+		// hacemos el run
+		insertEmbedding.run(chunk.id, serializeEmbedding(embedding));
 	}
 }
