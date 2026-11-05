@@ -51,7 +51,7 @@ export const chunkMarkdown = (content: string, filePath: string): Chunk[] => {
 			// le añadimos un objeto con la firma chunk
 			chunks.push({
 				id: `${fileName}-${globalPosition}`,
-				contet: chunkContent,
+				content: chunkContent,
 				metadata: {
 					source: fileName,
 					heading,
@@ -106,7 +106,7 @@ export const chunkMarkdown = (content: string, filePath: string): Chunk[] => {
 				// hacemos el push del chunkContent
 				chunks.push({
 					id: `${fileName}-${globalPosition}`,
-					contet: chunkContent,
+					content: chunkContent,
 					metadata: {
 						source: fileName,
 						heading: heading,
@@ -137,7 +137,7 @@ export const chunkMarkdown = (content: string, filePath: string): Chunk[] => {
 			// hacemos el push del chunkContent
 			chunks.push({
 				id: `${fileName}-${globalPosition}`,
-				contet: chunkContent,
+				content: chunkContent,
 				metadata: {
 					source: fileName,
 					heading: heading,

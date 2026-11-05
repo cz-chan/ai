@@ -1,7 +1,7 @@
 // https://link.excalidraw.com/readonly/WO228xv1MCSXZCmP9FQr?darkMode=true
 export interface Chunk {
 	id: string;
-	contet: string;
+	content: string;
 	metadata: {
 		source: string;
 		position: number;
