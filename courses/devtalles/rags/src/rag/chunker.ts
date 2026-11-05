@@ -154,3 +154,41 @@ export const chunkMarkdown = (content: string, filePath: string): Chunk[] => {
 
 	return chunks;
 };
+
+export async function processDirectory(dirPath: string): Promise<Chunk[]> {
+	const allChunks: Chunk[] = [];
+	let entries;
+
+	try {
+		entries = await fs.readdir(dirPath, { withFileTypes: true });
+	} catch (error) {
+		throw new Error(`It could not read the directory: ${dirPath}`);
+	}
+
+	// obtener SOLO los archivos .md yy ordenarlos alfabé.
+	const markdownFiles = entries
+		.filter(
+			(entry) => entry.isFile() && entry.name.toLowerCase().endsWith(".md"),
+		)
+		.sort((a, b) => a.name.localeCompare(b.name));
+
+	for (const file of markdownFiles) {
+		const fullPath = path.join(dirPath, file.name);
+		let content: string;
+
+		try {
+			content = await fs.readFile(fullPath, "utf-8");
+		} catch {
+			console.warn(`the content could not be read`);
+			continue; // este continue es útil para que si no lo encuentra,
+			// nos e quede trabado en el push del chunk de abajo ya que no
+			// sería un conten válido
+		}
+
+		const chunks = chunkMarkdown(content, file.name);
+		allChunks.push(...chunks);
+		console.log(`Processing ${file.name}... ${chunks.length}`);
+	}
+
+	return allChunks;
+}
