@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import * as sqliteVec from "sqlite-vec";
 import * as path from "path";
 import * as fs from "fs";
-import type { Chunk } from "../types/rag.types.ts";
+import type { Chunk, SearchResult } from "../types/rag.types.ts";
 
 /*
   usamos una db de SQLite para facilitar la vida y que esté en local pero por lo genral, 
@@ -102,6 +102,8 @@ export class VectorStore {
       esta es la tabla para almacenar los embeddings (tabla virtual) con el tipo de 
       búsqueda de KNN
 
+        KNN es:
+
       la tabla virtual necesita ser creada con 'VIRTUAL' porque no es una tabla 'normal'
       sino que le estás diciendo qeu esta tabla va a estar gestionada por una. extensión,
       en nuestro caso es sqlite-vec.
@@ -158,5 +160,61 @@ export class VectorStore {
       `);
 		// hacemos el run
 		insertEmbedding.run(chunk.id, serializeEmbedding(embedding));
+	}
+
+	// este es el método que permite devolver los embeddings ordenados por similitud
+	search(queryEmbedding: number[], topK: number): SearchResult[] {
+		/*
+      esta consulta se basa en el JOIN porque buscas comparar similitud entre 2 dbs
+      
+      en esta consulta renombro chunk_embedding como e y chunks como c para no tener
+      que escribir tanto (eso significa e y c).
+
+      lo que necsitamos de ambbas es: 
+        c.id, c.source, c.heading, c.position, c.char_count, e.distance
+
+      usas MATCH porque es lo qeu busca los vectores más cercanos al query y es el resultados
+      de k en KNN (ponemos en ambos una interrogación porque los pasamos después igual que 
+      en los INSERT) y se ordenan por la distancia entre chunks
+    */
+		const statement = this.db.prepare(`
+      SELECT c.id, c.source, c.heading, c.position, c.char_count, e.distance
+      FROM chunk_embedding e
+      JOIN chunks c ON c.id = e.chunk_id
+      WHERE e.embedding MATCH ?
+      AND k = ?
+      ORDER BY e.distance
+      `);
+
+		const rows = statement.all(
+			serializeEmbedding(queryEmbedding),
+			topK,
+		) as SearchRow[];
+		rows.map((row) => ({
+			chunk: {
+				id: row.id,
+				content: row.content,
+				metadata: {
+					source: row.source,
+					heading: row.heading,
+					position: row.position,
+					charCount: row.char_count,
+				},
+			},
+			/*
+        el score es qué tan acertado ha sido el match.
+
+        en sqlite-vec el score va de 0 a 2, donde 0 sería algo identico y 2 es opuesto
+        pero como en nuestro caso lo queremos de 0 a 1 por lo que el valor lo dividimos entre 2
+        y al restarselo a 1, nos dará el valor real entre 0 y 1
+      */
+			score: 1 - row.distance / 2,
+		}));
+	}
+
+	// limpias la db COMPLETA con un delete SIN el where
+	clear(): void {
+		this.db.exec("DELETE FROM chunk_embeddings");
+		this.db.exec("DELETE FROM chunks");
 	}
 }
