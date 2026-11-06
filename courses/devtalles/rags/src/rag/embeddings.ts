@@ -1,9 +1,8 @@
 import OpenAI from "openai";
-import { configLLM } from "../config.ts";
-import { embeddingProviders } from "../types/provider.types.ts";
+import { configEmbedding } from "../config.ts";
 
 const openaiClient = new OpenAI({
-	apiKey: configLLM.apiKey,
+	apiKey: configEmbedding.apiKey,
 });
 
 // un embedding sería una "traducción" de una palabra o texto a un
@@ -12,7 +11,7 @@ const openaiClient = new OpenAI({
 // si transformo algo con openai, no podré leerlo con boyage ai y viceversa
 export const generateEmbedding = async (text: string): Promise<number[]> => {
 	const response = await openaiClient.embeddings.create({
-		model: embeddingProviders.openai,
+		model: configEmbedding.model,
 		input: text,
 	});
 
@@ -28,7 +27,7 @@ export const generateEmbeddings = async (
 	texts: string[],
 ): Promise<number[][]> => {
 	const response = await openaiClient.embeddings.create({
-		model: embeddingProviders.openai,
+		model: configEmbedding.model,
 		input: texts,
 	});
 
