@@ -119,13 +119,13 @@ export class VectorStore {
 
     */
 		this.db.exec(`
-      CREATE TABLE IF NOT EXIST chunks(
+      CREATE TABLE IF NOT EXISTS chunks(
         id TEXT PRIMARY KEY,
         content TEXT NOT NULL,
         source TEXT NOT NULL,
         heading TEXT NOT NULL,
         position INTEGER NOT NULL,
-        char_count INTEGER NOT NULL,
+        char_count INTEGER NOT NULL
       )
       `);
 
@@ -149,7 +149,7 @@ export class VectorStore {
       además, necesitas darle el vec0 para decirle qeu va a ser una búsqueda KNN
     */
 		this.db.exec(`
-      CREATE VIRTUAL TABLE IF NOT EXIST chunk_embeddings USING vec0(
+      CREATE VIRTUAL TABLE IF NOT EXISTS chunk_embeddings USING vec0(
         chunk_id TEXT PARTITION KEY,
         embedding float[1536]
       )
