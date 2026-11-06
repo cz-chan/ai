@@ -25,7 +25,7 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
 // esta es para más de una palabra. devuelve un array de arrays:
 // devuelve un arrary con los distintos arrays de las distintas palabras
 export const generateEmbeddings = async (
-	texts: string,
+	texts: string[],
 ): Promise<number[][]> => {
 	const response = await openaiClient.embeddings.create({
 		model: embeddingProviders.openai,
