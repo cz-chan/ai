@@ -3,12 +3,43 @@ import * as sqliteVec from "sqlite-vec";
 import * as path from "path";
 import * as fs from "fs";
 import type { Chunk, SearchResult } from "../types/rag.types.ts";
+/*
+  un vectore store es una db donde se guardan los embeddings y para poder hacerla,
+  necesitas primero varios elementos:
+
+    1. chunks: necesitas tener aquello que quieres guardar/buscar transformado
+    en chunks o pedazos de texto con su metadata asociada
+    2. embeddings: es la representación numérica de los chunks guardada en la db
+    3. búsqueda KNN: es una técnica de recuperación de información usada para encontrar
+    vectores similares en un espacio matemático
+
+  el flujo de cómo sería la app sería:
+
+    1. tener un documento fuente en .md
+    2. dividir el documento en fragmentos de ~500token. Esto es porque cuando más largo
+    sea el documento a guardar, más token consume y más difícil es hacer la búsqueda
+    exacta. en cada chunk habrá el heading que lo contiene + último párrafo del chunk
+    anterior para tener todo el contexto y así poder buscar de una forma más precisa
+    3. hacer el proceso de embedding de cada uno de los chunks a 1536 dimensiones (son
+    estas dimensiones porque el modelo de openai así lo requiere)
+    4. teniedo esos embeddings creados, lo guardas en sqlite con vec0 para poder hacer
+    posteriormente la búsqueda
+    5. búsqueda de embedding por similitud semántica a través de KNN a través de
+    transformar la pregunta o búsqueda en embedding también y hacer la comparación KNN con
+    los ventores 
+
+
+*/
 
 /*
   usamos una db de SQLite para facilitar la vida y que esté en local pero por lo genral, 
-  en producción se usaría una db como postgresql donde en una columna se guardan los
-  embeddings en formato número y en producción y con postgres, necesitarias en vez de
+  en producción, se usaría una db como postgresql donde en una columna se guardan los
+  embeddings en formato número (numbre[][]), necesitarias en vez de
   sqlite-vec a pgvector para la búsqueda de vectores
+
+  de la forma con la que lo hacemos evitamos complejidad de preparación de servidores y 
+  escala mu fácilmente ya que todo está en un único archivo. y este tipo de escenarios se
+  usan y dan bien en demos y proyectos en producción que no necesitan escalar la complejidad
 
   y por qué usar float32 y no tal cual viene el embedding?
 
@@ -162,7 +193,9 @@ export class VectorStore {
 		insertEmbedding.run(chunk.id, serializeEmbedding(embedding));
 	}
 
-	// este es el método que permite devolver los embeddings ordenados por similitud
+	// este es el método que permite devolver los embeddings ordenados por similitud.
+	// recibe la consulta del usuario como un enbedding y el topK es el nº de resultados
+	// a devolver
 	search(queryEmbedding: number[], topK: number): SearchResult[] {
 		/*
       esta consulta se basa en el JOIN porque buscas comparar similitud entre 2 dbs
@@ -191,6 +224,7 @@ export class VectorStore {
 			topK,
 		) as SearchRow[];
 
+		// devuelve el arreglo de chunks con más similitud entre ellos
 		return rows.map((row) => ({
 			chunk: {
 				id: row.id,
@@ -217,5 +251,19 @@ export class VectorStore {
 	clear(): void {
 		this.db.exec("DELETE FROM chunk_embeddings");
 		this.db.exec("DELETE FROM chunks");
+	}
+
+	// obtener el tamaño de los chunks almacenados
+	get size(): number {
+		const row = this.db
+			.prepare(`SELECT COUNT(*) as count FROM chunks`)
+			.get() as { count: number };
+
+		return row.count;
+	}
+
+	// cierra la conexión con la db
+	close(): void {
+		this.db.close();
 	}
 }
