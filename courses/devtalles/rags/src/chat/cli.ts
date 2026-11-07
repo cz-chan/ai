@@ -4,7 +4,45 @@ import { configLLM } from "../config.ts";
 import { anthropicClient } from "../llm/anthropic/anthropic.ts";
 import { DOCUMENTATION_ASSISTANT_PROMPT } from "../llm/prompts.ts";
 import { TOOL_DEFINITIONS } from "../tools/definitions.ts";
-import { runWithTools } from "../tools/agent-loop.ts";
+// import { runWithTools } from "../tools/agent-loop.ts";
+import { processDirectory } from "../rag/chunker.ts";
+import { generateEmbeddings } from "../rag/embeddings.ts";
+import { VectorStore } from "../rag/vector-store.ts";
+import { resetStore, retrieveContext } from "../rag/retriever.ts";
+import { askWithRAG } from "../rag/rag-chain.ts";
+
+// función para integrar RAG en el CLI para que claude use la doc
+// además es útil par ano tener que hacer a propósito un pnpm ingest
+// y con un pnpm dev sobra
+async function ingestDocs(docsPath: string): Promise<void> {
+	console.log(`\nstart ingestion: ${docsPath}`);
+
+	const chunks = await processDirectory(docsPath);
+
+	if (chunks.length === 0) {
+		console.log("there are no .md files in the directory.");
+		return;
+	}
+
+	console.log(`generating embeddings for ${chunks.length} chunks...`);
+	const embeddings = await generateEmbeddings(chunks.map((c) => c.content));
+
+	const store = new VectorStore(configLLM.dbPath);
+	store.clear();
+
+	for (let i = 0; i < chunks.length; i++) {
+		const chunk = chunks[i];
+		const embedding = embeddings[i];
+		if (chunk && embedding) store.insert(chunk, embedding);
+	}
+
+	console.log(`${store.size} chunks saved in ${configLLM.dbPath}`);
+	store.close();
+
+	// Reiniciar el singleton
+	resetStore();
+	console.log("updated vector store — ready for search\n");
+}
 
 export async function startCLI(): Promise<void> {
 	const rl = readline.createInterface({
@@ -19,7 +57,8 @@ export async function startCLI(): Promise<void> {
 	});
 
 	console.log("💬 Escribe tu pregunta y presiona Enter.");
-	console.log("   Comandos: /clear, /stats, /tools, /exit");
+	console.log("💡 Tip: usa /ingest para cargar documentación");
+	console.log("   Comandos: /ingest [path], /clear, /stats, /tools, /exit");
 
 	const promptUser = async (): Promise<void> => {
 		const userInput = (await rl.question("Tu: ")).trim();
@@ -62,6 +101,31 @@ export async function startCLI(): Promise<void> {
 			return;
 		}
 
+		/*
+			este es startsWith y no un === porque puede enviar
+			a parte del comando, un path desde donde quiere hacer el ingest
+			si no es la manera por defecto por lo que permitimos que lo envie
+			pero como le hemos dicho que Comandos: /ingest [path],
+			el promer comando que tienen que llegar, antes de que nada pase 
+			es /ingest
+		*/
+		if (userInput.startsWith("/ingest")) {
+			// dividimos por el espacio ente /ingest [path-docs]
+			const inputParts = userInput.split(" ");
+
+			const docsDir = inputParts[1] ?? configLLM.docsPath;
+
+			try {
+				await ingestDocs(docsDir);
+			} catch (error) {
+				const err = error as Error;
+				console.error(`error during ingestion: ${err.message}`);
+			}
+
+			promptUser();
+			return;
+		}
+
 		if (userInput === "/exit") {
 			const stats = conversation.getStats();
 			console.log(
@@ -83,11 +147,32 @@ export async function startCLI(): Promise<void> {
 			conversation.addUserMessage(userInput);
 
 			// configuración de las tools en la conversación
-			const response = await runWithTools(
-				userInput,
-				DOCUMENTATION_ASSISTANT_PROMPT,
-				TOOL_DEFINITIONS,
-			);
+			//! para solo tools era esta la fomra, para ingest, es la siguiente
+			// const response = await runWithTools(
+			// 	userInput,
+			// 	DOCUMENTATION_ASSISTANT_PROMPT,
+			// 	TOOL_DEFINITIONS,
+			// );
+
+			/*
+				para hacer la respuesta a travñes de rag, lo primero es 
+				después de haber convertido la doc a embeddings, saber si la 
+				pregunta del usuario es relevante para usar esa doc, es dcir,
+				convertir la pregunta/useInput a embedding.y compararlo
+
+				(es lo mismo que hicimos en el rag.-chain)
+			*/
+			const chunks = await retrieveContext(userInput);
+			if (chunks.length === 0) {
+				const message =
+					`there are not available documentation in vectore store for this questis` +
+					'Please try first the command "/ingest"';
+
+				console.log(message);
+			}
+			const response = await askWithRAG(userInput, (outputChunk) => {
+				process.stdout.write(outputChunk);
+			});
 
 			// 2º: mandamos la respuesta de claude
 			process.stdout.write(`\n Claude: ${response}\n\n`);
