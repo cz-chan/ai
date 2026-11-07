@@ -93,7 +93,7 @@ export class VectorStore {
 	// para funcionar: 1º el dir y 2º la db (localmente)
 	constructor(dbPath: string) {
 		const dir = path.dirname(dbPath);
-		if (fs.existsSync(dir)) {
+		if (!fs.existsSync(dir)) {
 			// creas el directorio si no existe nada más instanciar la clase
 			fs.mkdirSync(dir, { recursive: true });
 		}
@@ -211,8 +211,8 @@ export class VectorStore {
       en los INSERT) y se ordenan por la distancia entre chunks
     */
 		const statement = this.db.prepare(`
-      SELECT c.id, c.source, c.heading, c.position, c.char_count, e.distance
-      FROM chunk_embedding e
+      SELECT c.id, c.content, c.source, c.heading, c.position, c.char_count, e.distance
+      FROM chunk_embeddings e
       JOIN chunks c ON c.id = e.chunk_id
       WHERE e.embedding MATCH ?
       AND k = ?
