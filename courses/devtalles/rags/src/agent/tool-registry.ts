@@ -1,6 +1,7 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import type { ToolDefinition } from "../types/tool-use.types.ts";
+import { retrieveContext } from "../rag/retriever.ts";
 
 // === Definiciones de las 2 tools nuevas ===
 
@@ -61,3 +62,39 @@ const CREATE_ISSUE_TOOL: ToolDefinition = {
 		required: ["title", "description"],
 	},
 };
+
+// función para buscar en la doc ingestada por búsqueda semántica
+async function executeSearchDocs(params: {
+	query: string;
+	topK?: number;
+}): Promise<string> {
+	try {
+		// queremos el minimo y que no se pase de 10 por lo que es el del params
+		// si viene, sino el 5. Y si viene que sea menor que 10, sino 10
+		const topK = Math.min(params.topK ?? 5, 10);
+
+		const chunks = await retrieveContext(params.query, topK);
+
+		if (chunks.length === 0) {
+			return (
+				`There are not relevant files for this query` +
+				`make sure you have ingested with "/ingest"`
+			);
+		}
+
+		const results = chunks
+			.map((chunk) => {
+				const source = chunk.metadata.source;
+				const section = chunk.metadata.heading;
+				const score = (chunk.score * 100).toFixed(0); // en % sin decimales
+
+				return `[SOURCE: ${source} | SECTION: ${section} | RELEVANCE: ${score}%\n${chunk.content}]`;
+			})
+			.join("\n\n---\n\n");
+
+		return `${chunks.length} relevant fragments were found:\n\n${results}`;
+	} catch (error) {
+		const messgae = error instanceof Error ? error.message : String(error);
+		return `Error searching docs: ${messgae}`;
+	}
+}
