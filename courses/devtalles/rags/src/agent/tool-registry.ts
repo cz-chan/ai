@@ -2,6 +2,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import type { ToolDefinition } from "../types/tool-use.types.ts";
 import { retrieveContext } from "../rag/retriever.ts";
+import { readdirSync } from "fs";
 
 // === Definiciones de las 2 tools nuevas ===
 
@@ -96,5 +97,21 @@ async function executeSearchDocs(params: {
 	} catch (error) {
 		const messgae = error instanceof Error ? error.message : String(error);
 		return `Error searching docs: ${messgae}`;
+	}
+}
+
+// función para crear las issues y devuelve el éxito/error en string
+async function executeCreateIssue(params: {
+	title: string;
+	description: string;
+	priority: string;
+	labels?: string[];
+}): Promise<string> {
+	try {
+		// directorio donde guardarlo y su posterior guardado
+		const issueDir = "./issues";
+	} catch (error) {
+		const messgae = error instanceof Error ? error.message : String(error);
+		return `Error creating issue: ${messgae}`;
 	}
 }
