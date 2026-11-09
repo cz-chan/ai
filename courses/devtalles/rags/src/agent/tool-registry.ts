@@ -2,7 +2,6 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import type { ToolDefinition, ToolNames } from "../types/tool-use.types.ts";
 import { retrieveContext } from "../rag/retriever.ts";
-import { readdirSync } from "fs";
 import { TOOL_DEFINITIONS } from "../tools/definitions.ts";
 import { executeTool } from "../tools/executor.ts";
 
