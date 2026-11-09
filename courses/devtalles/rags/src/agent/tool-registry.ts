@@ -1,6 +1,6 @@
 import * as fs from "fs/promises";
 import * as path from "path";
-import type { ToolDefinition } from "../types/tool-use.types.ts";
+import type { ToolDefinition, ToolNames } from "../types/tool-use.types.ts";
 import { retrieveContext } from "../rag/retriever.ts";
 import { readdirSync } from "fs";
 import { TOOL_DEFINITIONS } from "../tools/definitions.ts";
@@ -191,3 +191,44 @@ export const ALL_TOOLS_DEFINITION: ToolDefinition[] = [
 	SEARCH_DOCS_TOOL,
 	CREATE_ISSUE_TOOL,
 ];
+
+/*
+	función para ejecutar cualquier tool
+*/
+
+export async function executeTools(
+	name: ToolNames,
+	params: Record<string, unknown>,
+) {
+	const availableTools: ToolNames[] = [
+		"create_issue",
+		"list_files",
+		"read_files",
+		"search_code",
+		"search_docs",
+	];
+
+	switch (name) {
+		case "list_files":
+		case "read_files":
+		case "search_code": {
+			return executeTools(name, params);
+		}
+		case "search_docs": {
+			return executeSearchDocs(params as { query: string; top_k?: number });
+		}
+		case "create_issue": {
+			return executeCreateIssue(
+				params as {
+					title: string;
+					description: string;
+					priority: string;
+					labels?: string[];
+				},
+			);
+		}
+
+		default:
+			return `Error: unknown tool "${name}". Available tools ${availableTools.join(", ")}`;
+	}
+}
