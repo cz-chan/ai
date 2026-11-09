@@ -4,6 +4,7 @@ import type { ToolDefinition, ToolNames } from "../types/tool-use.types.ts";
 import { retrieveContext } from "../rag/retriever.ts";
 import { readdirSync } from "fs";
 import { TOOL_DEFINITIONS } from "../tools/definitions.ts";
+import { executeTool } from "../tools/executor.ts";
 
 // === Definiciones de las 2 tools nuevas ===
 
@@ -212,7 +213,7 @@ export async function executeTools(
 		case "list_files":
 		case "read_files":
 		case "search_code": {
-			return executeTools(name, params);
+			return executeTool(name, params);
 		}
 		case "search_docs": {
 			return executeSearchDocs(params as { query: string; top_k?: number });
