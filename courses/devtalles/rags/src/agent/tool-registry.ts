@@ -152,10 +152,16 @@ async function executeCreateIssue(params: {
 		const existingFiles = await fs.readdir(issueDir);
 		const existingIssues = existingFiles.filter((file) => file.endsWith(".md"));
 
-		const issueNum = existingIssues.length + 1;
+		const lastNum = Math.max(
+			0,
+			...existingIssues.map((file) => parseInt(file, 10) || 0),
+		);
+
+		// const issueNum = existingIssues.length + 1; // forma no muy segura de hacer las cuentas
+		const issueNum = lastNum + 1;
 		const formatIssueNum = String(issueNum).padStart(3, "0"); // rellena con ceros por delante del num
 
-		const fileName = `${formatIssueNum}-issue`;
+		const fileName = `${formatIssueNum}-issue.md`;
 		const fullPath = path.join(issueDir, fileName);
 
 		// coges los 10 primeros dígitos de la fecha (YYYY-MM-DD) sino sería (YYYY-MM-DD-MM-SS)
@@ -176,7 +182,27 @@ async function executeCreateIssue(params: {
 		*Issue creado automáticamente por DevAssistant*
 		`;
 
-		await fs.writeFile(fullPath, content, "utf-8");
+		/*
+			usamos el flag: "ws" para:
+
+				- w (write): abre para escribir y crea el archivo si no existe. 
+				es el default de writeFile; si ya existe, borra su contenido
+				- x (exclusive): falla si el archivo ya existe
+
+			lo usamos proque si un archivo ya existe, al estar usando el issueNum como un .length,
+			si se elimina un archivo, imagina que tienes 001, 002 y 003 y quitas el 001 porque ya
+			lo has solucionado, qudan 002 y 003 pero en length ahora es 2, por lo que al crear un
+			nuevo file, ira al número 003 y como ya existe, si no está el wx, lo sobreescribe y esa
+			issue se pierde. con ese ws, salta un error lanza EEXIST, tu catch lo atrapa y Claude 
+			recibe Error creating issue: EEXIST... en vez de perderse un issue.
+
+			se podría hacer eso o tener una varriable que solo se incrementa por cada issue
+			u que el número dependiera de ella y no del length
+
+			o usar los propios archivos que son la fuente de verdad:
+			const lastNum = Math.max(0, ...existingIssues.map((file) => parseInt(file, 10) || 0));
+		*/
+		await fs.writeFile(fullPath, content, { encoding: "utf-8", flag: "wx" });
 
 		return `Issue created: ${fullPath}\n Title: ${params.title}`;
 	} catch (error) {
