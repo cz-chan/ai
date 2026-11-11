@@ -1,0 +1,22 @@
+{
+	"name": "ai-engineering-course",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview"
+	},
+	"devDependencies": {
+		"typescript": "7.0.2",
+		"vite": "8.3.6"
+	},
+	"dependencies": {
+		"@ai-sdk/openai-compatible": "3.0.87",
+		"@anthropic-ai/sdk": "1.7.0",
+		"ai": "7.0.166",
+		"openai": "7.55.0",
+		"zod": "4.6.7"
+	}
+}
