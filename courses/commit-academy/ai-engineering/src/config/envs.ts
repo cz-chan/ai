@@ -1,5 +1,5 @@
 function getString(key: string): string {
-	const value = import.meta.env[key];
+	const value = import.meta.env?.[key] ?? process.env[key];
 
 	if (value === undefined || value === "")
 		throw new Error(`Missing env variable: ${key}`);
