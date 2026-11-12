@@ -10,7 +10,7 @@
 		"test:openai": "node --env-file=.env src/models/openai.ts",
 		"test:anthropic": "node --env-file=.env src/models/anthropic.ts",
 		"test:vercel": "node --env-file=.env src/models/vercel.ts",
-		"lab:01": "node --env-file=.env src/labs/01-llm-call.ts"
+		"lab:01": "node --env-file=.env src/labs/01/llm-call.ts"
 	},
 	"devDependencies": {
 		"@types/node": "26.6.6",
