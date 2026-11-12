@@ -7,6 +7,7 @@ function getString(key: string): string {
 }
 
 export const envs = {
-	PRACTICE_API_URL: getString("PRACTICE_API_URL"),
+	PRACTICE_API_URL_OPENAI: getString("PRACTICE_API_URL_OPENAI"),
+	PRACTICE_API_URL_ANTHROPIC: getString("PRACTICE_API_URL_ANTHROPIC"),
 	PRACTICE_API_KEY: getString("PRACTICE_API_KEY"),
 } as const;
