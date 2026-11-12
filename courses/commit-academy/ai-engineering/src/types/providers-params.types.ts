@@ -9,3 +9,6 @@ const providersParams = z.object({
 });
 
 export type ProvidersParams = z.infer<typeof providersParams>;
+
+export const providers = z.literal(["openai", "anthropic", "vercel"]);
+export type Providers = z.infer<typeof providers>;
