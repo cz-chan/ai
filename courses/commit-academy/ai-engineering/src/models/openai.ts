@@ -41,13 +41,21 @@ export async function useOpenai(params: ProvidersParams): Promise<string> {
 		por eso se necesita poner en choises el primer elemento del array, proque es un array de un elemento
 	*/
 	const message = response.choices[0].message.content;
+	const stopReason = response.choices[0].finish_reason;
 
 	if (!message) {
-		const stopReason = response.choices[0].finish_reason;
 		throw new Error(`Respuesta sin texto (stop_reason: ${stopReason})`);
 	}
 
-	return message;
+	const customMessage =
+		message === undefined
+			? `Respuesta sin texto (stop_reason: ${stopReason})` +
+				`\n[tokens] entrada=${response.usage?.prompt_tokens} | salida=[${response.usage?.completion_tokens}]`
+			: `\n[fin] ${stopReason}` +
+				`\n[tokens] entrada=${response.usage?.prompt_tokens} | salida=[${response.usage?.completion_tokens}]` +
+				`\n[content] ${message}`;
+
+	return customMessage;
 }
 // console.log(
 // 	await useOpenai({

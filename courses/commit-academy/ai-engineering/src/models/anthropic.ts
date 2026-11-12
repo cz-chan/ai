@@ -42,7 +42,7 @@ export async function useAnthropic(params: ProvidersParams): Promise<string> {
 	const message = response.content
 		.filter((msg) => msg.type === "text")
 		.map((content) => content.text)
-		.join(", ");
+		.join("");
 
 	if (!message) {
 		throw new Error(
@@ -50,7 +50,14 @@ export async function useAnthropic(params: ProvidersParams): Promise<string> {
 		);
 	}
 
-	return message;
+	const customMessage =
+		message === undefined
+			? `\n[fin] ${response.stop_reason}` +
+				`\n[tokens] entrada=${response.usage.input_tokens} | salida=[${response.usage.output_tokens}]`
+			: `\n[tokens] entrada=${response.usage.input_tokens} | salida=[${response.usage.output_tokens}]` +
+				`\n[content] ${message}`;
+
+	return customMessage;
 }
 
 // console.log(

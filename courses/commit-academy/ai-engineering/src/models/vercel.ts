@@ -14,14 +14,22 @@ const commit = createOpenAICompatible({
 export async function useVercel(params: ProvidersParams): Promise<string> {
 	const { model, prompt, maxTokens, systemPrompt } = params;
 
-	const { text } = await generateText({
+	const { text, finishReason, usage } = await generateText({
 		model: commit(model),
 		prompt: prompt,
 		maxOutputTokens: maxTokens,
 		instructions: systemPrompt,
 	});
 
-	return text;
+	const customMessage =
+		text.trim() === ""
+			? `Respuesta sin texto (stop_reason: ${finishReason})` +
+				`\n[tokens] entrada=${usage.inputTokens} | salida=[${usage.outputTokens}]`
+			: `\n[fin] ${finishReason}` +
+				`\n[tokens] entrada=${usage.inputTokens} | salida=[${usage.outputTokens}]` +
+				`\n[content] ${text}`;
+
+	return customMessage;
 }
 
 // console.log(
