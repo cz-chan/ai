@@ -12,11 +12,13 @@ const commit = createOpenAICompatible({
 });
 
 export async function useVercel(params: ProvidersParams): Promise<string> {
-	const { model, prompt } = params;
+	const { model, prompt, maxTokens, systemPrompt } = params;
 
 	const { text } = await generateText({
 		model: commit(model),
 		prompt: prompt,
+		maxOutputTokens: maxTokens,
+		instructions: systemPrompt,
 	});
 
 	return text;
