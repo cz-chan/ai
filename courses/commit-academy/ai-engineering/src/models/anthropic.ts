@@ -3,10 +3,11 @@ import { envs } from "../config/envs.ts";
 import type { ProvidersParams } from "../types/providers-params.types.ts";
 
 const client = new Anthropic({
-	baseURL: envs.PRACTICE_API_URL,
+	baseURL: envs.PRACTICE_API_URL_ANTHROPIC,
 	apiKey: envs.PRACTICE_API_KEY,
 });
 
+// anthropic docs: https://platform.claude.com/docs/en/api/http/beta/messages/create
 export async function useAnthropic(params: ProvidersParams): Promise<string> {
 	const { model, prompt, maxTokens, systemPrompt } = params;
 	/*
@@ -15,7 +16,7 @@ export async function useAnthropic(params: ProvidersParams): Promise<string> {
 	*/
 	const response = await client.messages.create({
 		model: model,
-		max_tokens: maxTokens,
+		max_tokens: maxTokens ?? 400,
 		messages: [{ role: "user", content: prompt }],
 		...(systemPrompt && { system: systemPrompt }),
 	});
@@ -51,3 +52,10 @@ export async function useAnthropic(params: ProvidersParams): Promise<string> {
 
 	return message;
 }
+
+// console.log(
+// 	await useAnthropic({
+// 		model: "fast",
+// 		prompt: "say hi",
+// 	}),
+// );
