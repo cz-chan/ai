@@ -1,4 +1,5 @@
-import { flagsSchema } from "../../types/cli-options.type.ts";
+import z from "zod";
+import { flagsSchema, cliArgsSchema } from "../../types/cli-options.type.ts";
 import type { ProvidersParams } from "../../types/providers-params.types.ts";
 
 const SYSTEM_PROMPT =
@@ -97,6 +98,10 @@ function flagToKey(flag: string): string {
 // guardo los flags(key) - values que me pase el usuario por la terminal
 const rawFlags: Record<string, string> = {};
 
+// añadimos al rawFlags la tool que nos llega en la primera posición y al final, después de haber
+// añadido todo, validamos lo que tenemos dentro de rawFlags junto con el cliArgsSchema que se espera
+rawFlags["tool"] = flagToKey(args[0]);
+
 // el bucle es para coger cada una de las flags y saltarme el resumen y la tool (empiezo en el [2])
 // porque así es como he construido la tool
 // [0] = tool que el modelo usará y [1] = texto o ruta que el modelo va a recibir
@@ -113,3 +118,11 @@ for (let i = 2; i < args.length; i++) {
 		}
 	}
 }
+
+const result = cliArgsSchema.safeParse(rawFlags);
+if (!result.success) {
+	console.error(z.prettifyError(result.error));
+	process.exit(1);
+}
+
+console.log(result.data);
