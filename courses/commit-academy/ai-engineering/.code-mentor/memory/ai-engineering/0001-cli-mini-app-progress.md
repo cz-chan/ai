@@ -39,10 +39,12 @@ Explanations: normal (trainee level).
 
 ## Current step
 
-Step 3: validation + usage + exit codes.
-Problem: raw parse accepts bad input silently: `--model` last → `{ model: undefined }`; `--model --max-tokens 100` → `{ model: '--max-tokens' }`; `--to-string x` / `--constructor y` pass the `in` check (inherited Object.prototype props; harmless after safeParse strips unknown keys, but `Object.hasOwn` is the exact check); args[0] tool not validated yet; `--help`/`-h` not handled.
-State: schemas in `src/types/cli-options.type.ts`: `flagsSchema` {model, maxTokens} (loop whitelist via `.shape`) and `toolsSchema` {tools} (no default, mandatory; suggested rename key to `tool`). Option C agreed as plan: in step 3 combine with `flagsSchema.extend(toolsSchema.shape)` → one safeParse, one error branch.
-Next: fill rawFlags.tool from args[0] (strip "--"), handle flag-without-value (value missing or starts with "--"), safeParse combined schema, print usage + exit codes.
+Step 3: validation + usage + exit codes, split in 3a/3b/3c.
+- [x] 3a (2026-11-14): `rawFlags.tool = flagToKey(args[0])`; `cliArgsSchema = flagsSchema.extend(toolsSchema.shape)` (separate const, loop keeps `flagsSchema.shape` whitelist); `safeParse` → `console.error(z.prettifyError(...))` + `process.exit(1)`. Custom zod messages added. Verified: valid → exit 0 with coerced number; bad tool/model/max-tokens → exit 1, errors on stderr. Got stuck on: manual `if (x !== typeof toolsSchema)` (typeof → "object", always threw) and extending flagsSchema in place (reopened `--tool` backdoor).
+- [ ] 3b: flag without value: `--model` last → `{ model: undefined }`; `--model --max-tokens 100` → `{ model: '--max-tokens' }`. Optional: `Object.hasOwn` vs `in` (`--to-string x` passes `in`).
+- [ ] 3c: `--help`/`-h` only at [0] and alone → usage, exit 0; no args → usage, exit 1 (now crashes: `flagToKey(undefined)` → "Cannot read properties of undefined"); hint line every run on stderr.
+Next action (session ended 2026-11-14): start 3b by asking the open question — which 2 conditions on `args[i + 1]` mean a flag has no value (undefined / starts with "--"). 3a already committed by user.
+Minor: error path shows `→ at maxTokens` (internal key, user typed `--max-tokens`); typo "unkenown" in model message.
 Pending (user deferred 2026-11-14): update design comment in command-line.ts — [1] optional (stdin), --help only at [0] and alone + hint line every run, positions as "from [2], `--flag value` pairs".
 Later notes: `providers-params.types.ts` imports `./ai-model-names.types` without `.ts` — fine for type-only imports, breaks if imported at runtime (e.g. `llmModelNames` for validation → import from `ai-model-names.types.ts` directly). Stdin/path (step 4) also count as text, so the "no text" check must run after all sources. Scope 2026-11-14: user chose 3 tools with mandatory [0] (statement asks for one; extra is fine, but `cli "texto"` from statement no longer works — user accepted).
 
