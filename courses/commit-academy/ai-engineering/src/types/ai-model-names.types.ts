@@ -10,7 +10,9 @@ import z from "zod";
  * chaos: Falla a propósito: practica reintentos
  */
 
-export const llmModelNames = z.literal([
+export const llmModelNames = z.enum([
+	// le doy .enum y no .literal para poder usar la api que trae para extraer, excluir y usar solo
+	// aquellos que me interesan en los labs
 	"fast",
 	"smart",
 	"embed",
