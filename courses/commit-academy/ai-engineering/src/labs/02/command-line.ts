@@ -84,36 +84,8 @@ ejemplo:
 	un comando adicional será el --help (-h) que le dirá cómo se puede usar el CLI para que le responda bien
 */
 
-const args = process.argv.slice(2);
-
-// necesito esta función para transformar los flags al tipo de dato que me hacen falta en mi schema
-function flagToKey(flag: string): string {
-	return flag
-		.slice(2)
-		.split("-")
-		.map((segment, i) =>
-			i === 0 ? segment : segment.slice(0, 1).toUpperCase() + segment.slice(1),
-		)
-		.join("");
-}
-
-// necesito esta función para convertir el valor váludo de la app al valor que el usuario debe mandar
-function keyToFlag(key: string): string {
-	const flag =
-		"--" + key.replace(/[A-Z]/g, (match) => "-" + match.toLowerCase());
-
-	return flag;
-}
-
-// guardo los flags(key) - values que me pase el usuario por la terminal
-const rawFlags: Record<string, string> = {};
-
-// añadimos al rawFlags la tool que nos llega en la primera posición y al final, después de haber
-// añadido todo, validamos lo que tenemos dentro de rawFlags junto con el cliArgsSchema que se espera
-rawFlags["tool"] = flagToKey(args[0]);
-
-// función para lanzar el mensaje de error dependiendo del problema
-function usageMessage(): string {
+// función donde se explica cómo usar el CLI
+function usageCliMessage(): string {
 	const message = [
 		`Uso:`,
 		`Recuerda que el primer flag que debes poner es la línea de comandos es que herramienta (tool) quieres que use el agente:`,
@@ -144,6 +116,46 @@ function usageMessage(): string {
 	return message.join("\n");
 }
 
+const args = process.argv.slice(2);
+
+// necesito esta función para transformar los flags al tipo de dato que me hacen falta en mi schema
+function flagToKey(flag: string): string {
+	return flag
+		.slice(2)
+		.split("-")
+		.map((segment, i) =>
+			i === 0 ? segment : segment.slice(0, 1).toUpperCase() + segment.slice(1),
+		)
+		.join("");
+}
+
+// necesito esta función para convertir el valor váludo de la app al valor que el usuario debe mandar
+function keyToFlag(key: string): string {
+	const flag =
+		"--" + key.replace(/[A-Z]/g, (match) => "-" + match.toLowerCase());
+
+	return flag;
+}
+
+// caso para cuando el usuario quiere ayuda. en la posición 0 de args deberá estar --help o -h
+if (args[0] === "--help" || args[0] === "-h") {
+	console.info(usageCliMessage());
+	process.exit(0);
+}
+
+// para el caso de que no envie nada y solo ejecute el archivo/cli
+if (args.length === 0) {
+	console.error(usageCliMessage());
+	process.exit(1);
+}
+
+// guardo los flags(key) - values que me pase el usuario por la terminal
+const rawFlags: Record<string, string> = {};
+
+// añadimos al rawFlags la tool que nos llega en la primera posición y al final, después de haber
+// añadido todo, validamos lo que tenemos dentro de rawFlags junto con el cliArgsSchema que se espera
+rawFlags["tool"] = flagToKey(args[0]);
+
 // el bucle es para coger cada una de las flags y saltarme el resumen y la tool (empiezo en el [2])
 // porque así es como he construido la tool
 // [0] = tool que el modelo usará y [1] = texto o ruta que el modelo va a recibir
@@ -158,7 +170,7 @@ for (let i = 2; i < args.length; i++) {
 			// pero no si cumple el esquema de zod, esos errores de validación se hacen con el parse al map, sino
 			// si lo que hay inmediatamente después es algo, a priori, válido
 			if (args[i + 1] === undefined || args[i + 1].startsWith("--")) {
-				const errorMessage = `${args[i]} debe tener un input válido.\n\n${usageMessage()}`;
+				const errorMessage = `${args[i]} debe tener un input válido.\n\n${usageCliMessage()}`;
 
 				console.error(errorMessage);
 				// necesito cerrar el proceso porque sino guardaría el valor. el error es un aviso, no corta nada
@@ -177,5 +189,3 @@ if (!result.success) {
 	console.error(z.prettifyError(result.error));
 	process.exit(1);
 }
-
-console.log(result.data);
