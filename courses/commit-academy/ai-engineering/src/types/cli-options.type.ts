@@ -21,8 +21,24 @@ export type Flags = z.infer<typeof flagsSchema>;
 
 export const toolsSchema = z.object({
 	// no lleva un default porqeu es obligatorio
-	tool: z.literal(
-		["summary", "category", "extract"],
+	tool: z.union(
+		[
+			z
+				.literal("summary")
+				.describe(
+					"el agente debe devolver los tres puntos clave del texto proporcionado",
+				),
+			z
+				.literal("category")
+				.describe(
+					"etiqueta un mensaje con una categoría (por ejemplo: ticket de soporte) sobre el tema del que va el texto dado",
+				),
+			z
+				.literal("extract")
+				.describe(
+					"devuelve un dato sobre el cual el usuario haya preguntado en un texto concreto (por ejemplo: un nombre, una fecha o un importe)",
+				),
+		],
 		'unknown tool. only accept: "--summary", "--category" or "--extract" for now.',
 	),
 });
