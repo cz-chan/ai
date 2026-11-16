@@ -1,5 +1,9 @@
 import z from "zod";
-import { flagsSchema, cliArgsSchema } from "../../types/cli-options.type.ts";
+import {
+	flagsSchema,
+	cliArgsSchema,
+	toolsSchema,
+} from "../../types/cli-options.type.ts";
 import type { ProvidersParams } from "../../types/providers-params.types.ts";
 
 const SYSTEM_PROMPT =
@@ -82,9 +86,7 @@ ejemplo:
 
 const args = process.argv.slice(2);
 
-// tipos de
-
-// necesito esta funcuón para transformar los flags al tipo de dato que me hacen falta en mi schema
+// necesito esta función para transformar los flags al tipo de dato que me hacen falta en mi schema
 function flagToKey(flag: string): string {
 	return flag
 		.slice(2)
@@ -95,12 +97,52 @@ function flagToKey(flag: string): string {
 		.join("");
 }
 
+// necesito esta función para convertir el valor váludo de la app al valor que el usuario debe mandar
+function keyToFlag(key: string): string {
+	const flag =
+		"--" + key.replace(/[A-Z]/g, (match) => "-" + match.toLowerCase());
+
+	return flag;
+}
+
 // guardo los flags(key) - values que me pase el usuario por la terminal
 const rawFlags: Record<string, string> = {};
 
 // añadimos al rawFlags la tool que nos llega en la primera posición y al final, después de haber
 // añadido todo, validamos lo que tenemos dentro de rawFlags junto con el cliArgsSchema que se espera
 rawFlags["tool"] = flagToKey(args[0]);
+
+// función para lanzar el mensaje de error dependiendo del problema
+function usageMessage(): string {
+	const message = [
+		`Uso:`,
+		`Recuerda que el primer flag que debes poner es la línea de comandos es que herramienta (tool) quieres que use el agente:`,
+		toolsSchema.shape.tool.options
+			.map((tool, i) => {
+				const value = keyToFlag(tool.value);
+				const description = tool.description;
+
+				if (!description) {
+					throw new Error("tool description unavailable");
+				}
+
+				return (
+					` -tool ${i + 1}: ` + `'${value}' -> description: ${description}\n`
+				);
+			})
+			.join(""),
+		`Después de la tool debes colocar el texto que quieres que analice entrecomillado o indicar el archivo, a través de la ruta absoluta, que quieres que use.\n`,
+		`Los flags (opcionales) a los que tienes acceso por ahora son: ${Object.keys(
+			flagsSchema.shape,
+		)
+			.map((key) => keyToFlag(key))
+			.join(", ")}`,
+		`\nPor ejemplo: \n"node ruta_archivo/command-line.ts --summary 'este es el texto que quiero resumir' --model fast --max-tokens 256".\n\n` +
+			`En caso de omitir '--model' y/o '--max-tokens' por defecto será: fast y 256 respecticamente.`,
+	];
+
+	return message.join("\n");
+}
 
 // el bucle es para coger cada una de las flags y saltarme el resumen y la tool (empiezo en el [2])
 // porque así es como he construido la tool
@@ -110,7 +152,18 @@ for (let i = 2; i < args.length; i++) {
 		const key = flagToKey(args[i]);
 
 		// si la key está en el esquema de flags añade la key y su valor que siempre está a su derecha
+		// a no ser que no haya valor a la derecha o sea algo erróneo/no esperado
 		if (key in flagsSchema.shape) {
+			// antes de la asignación de key/value necesito comprobar que lo que hay a la derecha es lo que debe haber
+			// pero no si cumple el esquema de zod, esos errores de validación se hacen con el parse al map, sino
+			// si lo que hay inmediatamente después es algo, a priori, válido
+			if (args[i + 1] === undefined || args[i + 1].startsWith("--")) {
+				const errorMessage = `${args[i]} debe tener un input válido.\n\n${usageMessage()}`;
+
+				console.error(errorMessage);
+				// necesito cerrar el proceso porque sino guardaría el valor. el error es un aviso, no corta nada
+				process.exit(1);
+			}
 			rawFlags[key] = args[i + 1];
 
 			// sumamos uno para que pase al siguiente elemento y no pase al value
