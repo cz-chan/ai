@@ -5,7 +5,7 @@ concepts:
   [process-argv, stdin, system-prompt, finish-reason, token-usage, exit-codes]
 level: trainee
 mode: guided-feature
-updated: 2026-11-14
+updated: 2026-11-16
 ---
 
 ## Agreement
@@ -27,8 +27,8 @@ Explanations: normal (trainee level).
 
 - [x] 1. Read text from argv (first arg)
 - [x] 2. Hand-written arg parser: `--model <name>` + `--max-tokens <n>` from index 2, any order, unknown ignored, raw `Record<string,string>` via flag→key map (no libraries, user's choice)
-- [ ] 3. Validation ← current + usage + exit: args[0] must be `--summary`/`--category`/`--extract` (else error); `--help`/`-h` only valid at [0] and alone (args.length === 1) → usage, exit 0; no args → usage, exit 1; `flags.safeParse(raw)` (zod, cli-flags.type.ts) → error msg; flag without value; every run prints a hint line "si necesita ayuda, usa --help o -h" (suggest stderr so it doesn't mix with result)
-- [ ] 4. Text input (decided 2026-11-14: stdin + path): args[1] existing file path → read with fs; args[1] other → it's the text; no args[1] → read stdin (`cli --summary < texto.txt`); none of them → usage + exit 1
+- [x] 3. Validation + usage + exit: args[0] must be `--summary`/`--category`/`--extract` (else error); `--help`/`-h` only valid at [0] and alone (args.length === 1) → usage, exit 0; no args → usage, exit 1; `flags.safeParse(raw)` (zod, cli-flags.type.ts) → error msg; flag without value; every run prints a hint line "si necesita ayuda, usa --help o -h" (suggest stderr so it doesn't mix with result)
+- [ ] 4. Text input ← current (decided 2026-11-14: stdin + path): args[1] existing file path → read with fs; args[1] other → it's the text; no args[1] → read stdin (`cli --summary < texto.txt`); none of them → usage + exit 1
      --- mentor scope ends here; steps below are user-solo (help only if asked) ---
 - [ ] 5. One system prompt per tool (summary/category/extract) + send systemPrompt in openai + vercel clients
 - [ ] 6. Build params and call provider; print result + usage
@@ -39,14 +39,13 @@ Explanations: normal (trainee level).
 
 ## Current step
 
-Step 3: validation + usage + exit codes, split in 3a/3b/3c.
-- [x] 3a (2026-11-14): `rawFlags.tool = flagToKey(args[0])`; `cliArgsSchema = flagsSchema.extend(toolsSchema.shape)` (separate const, loop keeps `flagsSchema.shape` whitelist); `safeParse` → `console.error(z.prettifyError(...))` + `process.exit(1)`. Custom zod messages added. Verified: valid → exit 0 with coerced number; bad tool/model/max-tokens → exit 1, errors on stderr. Got stuck on: manual `if (x !== typeof toolsSchema)` (typeof → "object", always threw) and extending flagsSchema in place (reopened `--tool` backdoor).
-- [ ] 3b: flag without value: `--model` last → `{ model: undefined }`; `--model --max-tokens 100` → `{ model: '--max-tokens' }`. Optional: `Object.hasOwn` vs `in` (`--to-string x` passes `in`).
-- [ ] 3c: `--help`/`-h` only at [0] and alone → usage, exit 0; no args → usage, exit 1 (now crashes: `flagToKey(undefined)` → "Cannot read properties of undefined"); hint line every run on stderr.
-Next action (session ended 2026-11-14): start 3b by asking the open question — which 2 conditions on `args[i + 1]` mean a flag has no value (undefined / starts with "--"). 3a already committed by user.
-Minor: error path shows `→ at maxTokens` (internal key, user typed `--max-tokens`); typo "unkenown" in model message.
-Pending (user deferred 2026-11-14): update design comment in command-line.ts — [1] optional (stdin), --help only at [0] and alone + hint line every run, positions as "from [2], `--flag value` pairs".
-Later notes: `providers-params.types.ts` imports `./ai-model-names.types` without `.ts` — fine for type-only imports, breaks if imported at runtime (e.g. `llmModelNames` for validation → import from `ai-model-names.types.ts` directly). Stdin/path (step 4) also count as text, so the "no text" check must run after all sources. Scope 2026-11-14: user chose 3 tools with mandatory [0] (statement asks for one; extra is fine, but `cli "texto"` from statement no longer works — user accepted).
+Step 4: text input from args[1] (file path or literal text) or stdin.
+Problem: today args[1] is ignored; `cli --summary < texto.txt` has no args[1] and must read stdin; a path should be read with fs.
+Why: the statement asks for both `cli "texto"` and `cli < texto.txt`; path support was the user's choice.
+Next action: explain the 3 sources and their order (args[1] path? → file; args[1] other → text; none → stdin; still empty → error + usage, exit 1). The "no text" check must run after all sources.
+Open: user removed `console.log(result.data)` at the end — ask if intentional (step 6 prep). Optional from plan: hint line "usa --help o -h" every run (not done).
+Minor: zod error path shows `→ at maxTokens` (internal key) — `keyToFlag` can fix it.
+Later notes: `providers-params.types.ts` imports `./ai-model-names.types` without `.ts` — fine for type-only imports, breaks if imported at runtime. Pending (user deferred 2026-11-14): update design comment in command-line.ts (help at [0] wins over other args; [1] optional/stdin).
 
 ## Log
 
@@ -63,6 +62,20 @@ Later notes: `providers-params.types.ts` imports `./ai-model-names.types` withou
 - Solved by: explanation of type erasure; traced `"tokens"[1]` → "o"; ternary as the returned expression of an arrow without braces.
 - Lesson: `import type` disappears at runtime — anything used as a value (a zod schema for `.shape`/`.safeParse`) needs a normal import. String methods never modify the string, they return a new one, so their result must be returned or stored. A ternary is an expression that produces a value: put it where the value goes (`return`, arrow body), never use it to run assignments. Spot it when a ternary's result isn't used by anything.
 
+### 3b. Flag without value + usage message — 2026-11-16
+
+- Did: missing-value check + exit 1; `keyToFlag`; tools as union of described literals; `usageMessage()`.
+- Stuck on: listing keys showed internal camelCase names; `z.object` fed an array (keys became "0","1","2"); description modeled as an input field (`z.object({tool, description: z.string()})`); `Object.keys` wrapped around an array → "0,1,2"; array in template without `.join` → leading commas.
+- Solved by: inverse function from schema (single source of truth); `.describe()` metadata on each literal inside `z.union`; tracing what each call returns.
+- Lesson: A zod schema describes the shape of incoming data; info _about_ a value (a description) is metadata (`.describe()`), not a field. `z.object` takes `{key: schema}`, `z.union` takes `[schemas]` — passing an array where an object is expected silently turns indices into keys, same as `Object.keys([...])` → "0","1","2". When "0,1,2" or stray commas appear, check where an array is treated as an object or stringified without `.join`. `.extract/.exclude` exist only on `z.enum`.
+
+### 3c. --help / no args — 2026-11-16
+
+- Did: `--help`/`-h` at [0] → `console.info(usage)`, exit 0 (help wins even with more args — user's design, like git); no args → `console.error(usage)`, exit 1; both before `flagToKey(args[0])`.
+- Stuck on: used `console.warn` for help (goes to stderr); first merged no-args with help (exit 0).
+- Solved by: stdout/stderr table + `> /dev/null` check; `cli $EMPTY && echo ok` scenario for exit codes.
+- Lesson: `console.log/info` → stdout, `console.warn/error` → stderr. Requested output (help) goes to stdout with exit 0; the same text shown because of a usage error goes to stderr with exit 1, so scripts (`&&`, pipes) can tell success from failure. Guard checks must run before any code that assumes the input exists (`flagToKey(undefined)` crashed).
+
 ## Where it lives in the repo
 
 - `src/labs/02/command-line.ts`, `src/types/cli-options.type.ts`, `src/models/*.ts`, `src/types/providers-params.types.ts`
@@ -74,5 +87,11 @@ Later notes: `providers-params.types.ts` imports `./ai-model-names.types` withou
 - MDN — Conditional (ternary) operator: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Operators/Conditional_operator (official)
 - Zod — defaults / coercion / objects / extend: https://zod.dev/api (official)
 
+- MDN — String.replace: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/String/replace (official)
+- MDN — Array.from: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array/from (official)
+- MDN — padEnd: https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/String/padEnd (official)
+- TS — Indexed Access Types: https://www.typescriptlang.org/docs/handbook/2/indexed-access-types.html (official)
+- TS — Record: https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type (official)
+- Zod — Metadata: https://zod.dev/metadata ; Unions: https://zod.dev/api#unions (official)
 - Node — process.argv: https://nodejs.org/api/process.html#processargv (official)
 - commander.js README: https://github.com/tj/commander.js/blob/master/Readme.md (official) — explained, not used
