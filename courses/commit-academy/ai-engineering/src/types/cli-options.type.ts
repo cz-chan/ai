@@ -7,11 +7,11 @@ export const flagsSchema = z.object({
 	model: llmModelNames
 		.extract(
 			["fast", "chaos", "smart"],
-			'unkenown model. only accept: "fast", "chaos" or "smart" for now.',
+			'unknown model. only accept: "fast", "chaos" or "smart" for now.',
 		)
 		.default("fast"),
 	maxTokens: z.coerce
-		.number("max-tokens must be a positive integer.")
+		.number("--max-tokens must be a positive integer.")
 		.int()
 		.positive()
 		.default(256),
