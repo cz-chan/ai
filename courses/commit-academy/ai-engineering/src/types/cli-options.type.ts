@@ -1,5 +1,6 @@
 import z from "zod";
 import { llmModelNames } from "./ai-model-names.types.ts";
+import { providers } from "./providers-params.types.ts";
 
 // no puedo usar discriminatedUnion porque si un flag no viene, al no existir el valor por defecto nunca se ejecuta
 export const flagsSchema = z.object({
@@ -15,6 +16,12 @@ export const flagsSchema = z.object({
 		.int()
 		.positive()
 		.default(256),
+	provider: providers
+		.extract(
+			["anthropic", "openai", "vercel"],
+			'unknown provider. only accept "anthropic", "openai" or "vercel" for now.',
+		)
+		.default("anthropic"),
 });
 
 export type Flags = z.infer<typeof flagsSchema>;
