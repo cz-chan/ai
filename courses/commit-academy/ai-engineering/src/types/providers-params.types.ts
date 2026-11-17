@@ -1,5 +1,5 @@
 import z from "zod";
-import { llmModelNames } from "./ai-model-names.types";
+import { llmModelNames } from "./ai-model-names.types.ts";
 
 const providersParams = z.object({
 	model: llmModelNames,
