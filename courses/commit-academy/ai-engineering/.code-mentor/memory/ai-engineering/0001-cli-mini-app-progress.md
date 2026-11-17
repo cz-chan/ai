@@ -5,7 +5,7 @@ concepts:
   [process-argv, stdin, system-prompt, finish-reason, token-usage, exit-codes]
 level: trainee
 mode: guided-feature
-updated: 2026-11-16
+updated: 2026-11-17
 ---
 
 ## Agreement
@@ -28,9 +28,9 @@ Explanations: normal (trainee level).
 - [x] 1. Read text from argv (first arg)
 - [x] 2. Hand-written arg parser: `--model <name>` + `--max-tokens <n>` from index 2, any order, unknown ignored, raw `Record<string,string>` via flag→key map (no libraries, user's choice)
 - [x] 3. Validation + usage + exit: args[0] must be `--summary`/`--category`/`--extract` (else error); `--help`/`-h` only valid at [0] and alone (args.length === 1) → usage, exit 0; no args → usage, exit 1; `flags.safeParse(raw)` (zod, cli-flags.type.ts) → error msg; flag without value; every run prints a hint line "si necesita ayuda, usa --help o -h" (suggest stderr so it doesn't mix with result)
-- [ ] 4. Text input ← current (decided 2026-11-14: stdin + path): args[1] existing file path → read with fs; args[1] other → it's the text; no args[1] → read stdin (`cli --summary < texto.txt`); none of them → usage + exit 1
+- [x] 4. Text input (decided 2026-11-14: stdin + path): args[1] existing file path → read with fs; args[1] other → it's the text; no args[1] → read stdin (`cli --summary < texto.txt`); none of them → usage + exit 1
      --- mentor scope ends here; steps below are user-solo (help only if asked) ---
-- [ ] 5. One system prompt per tool (summary/category/extract) + send systemPrompt in openai + vercel clients
+- [ ] 5. ← current (user-solo) One system prompt per tool (summary/category/extract) + send systemPrompt in openai + vercel clients
 - [ ] 6. Build params and call provider; print result + usage
 - [ ] 7. Length warning (finish_reason length / max_tokens)
 - [ ] 8. pnpm script `lab:02`
@@ -39,13 +39,11 @@ Explanations: normal (trainee level).
 
 ## Current step
 
-Step 4: text input from args[1] (file path or literal text) or stdin.
-Problem: today args[1] is ignored; `cli --summary < texto.txt` has no args[1] and must read stdin; a path should be read with fs.
-Why: the statement asks for both `cli "texto"` and `cli < texto.txt`; path support was the user's choice.
-Next action: explain the 3 sources and their order (args[1] path? → file; args[1] other → text; none → stdin; still empty → error + usage, exit 1). The "no text" check must run after all sources.
-Open: user removed `console.log(result.data)` at the end — ask if intentional (step 6 prep). Optional from plan: hint line "usa --help o -h" every run (not done).
-Minor: zod error path shows `→ at maxTokens` (internal key) — `keyToFlag` can fix it.
-Later notes: `providers-params.types.ts` imports `./ai-model-names.types` without `.ts` — fine for type-only imports, breaks if imported at runtime. Pending (user deferred 2026-11-14): update design comment in command-line.ts (help at [0] wins over other args; [1] optional/stdin).
+Mentor scope (steps 1–4) finished 2026-11-17. Step 5+ are user-solo: help only if asked.
+Next action if they come back: whatever they ask about steps 5–10. Don't drive.
+Open: user didn't answer about commit for steps 3–4. User removed `console.log(result.data)`; now prints `text` (temporary, step 6 replaces it). `--summary` alone in a real TTY not verified by mentor (no TTY in agent env) — user to check.
+Minor (mentioned once): line ~197 ternary used as statement with assignments (`cond ? (a = 1) : (a = 2)`) — same lesson as step 2; `textArg` if/else could be a const ternary. Zod error path shows `→ at maxTokens`. `--help` output: leading blank line fixed? (`customMessage && ...` + join). Text typos in usage ("es la línea... es que", "respecticamente").
+Later notes: `providers-params.types.ts` imports `./ai-model-names.types` without `.ts` — fine for type-only, breaks at runtime. Design comment in command-line.ts still outdated (help at [0] wins; [1] optional → stdin; flags start at [1] when no text arg).
 
 ## Log
 
@@ -76,6 +74,13 @@ Later notes: `providers-params.types.ts` imports `./ai-model-names.types` withou
 - Solved by: stdout/stderr table + `> /dev/null` check; `cli $EMPTY && echo ok` scenario for exit codes.
 - Lesson: `console.log/info` → stdout, `console.warn/error` → stderr. Requested output (help) goes to stdout with exit 0; the same text shown because of a usage error goes to stderr with exit 1, so scripts (`&&`, pipes) can tell success from failure. Guard checks must run before any code that assumes the input exists (`flagToKey(undefined)` crashed).
 
+### 4. Text input (arg / file / stdin) — 2026-11-17
+
+- Did: `readInput(arg)`: undefined → `isTTY` ? throw : `return fs.readFileSync(0)`; else `try { statSync(arg) } catch { return arg }` → dir → throw; file → `readFileSync(arg)`. Top level: `try { text = readInput(textArg).trim() } catch → console.error + exit 1`; empty → error + exit 1. Option B: `textArg` = undefined when `args[1]` starts with `--`, flags loop starts at 1 in that case, so `echo x | cli --summary --model fast` works.
+- Stuck on: what stdin/stdout/stderr and fd 0 are; `isTTY` meaning (thought true = keyboard sent data); assigned stdin to `arg` and fell through into statSync (ENAMETOOLONG on long text); `throwIfNoEntry` only silences ENOENT; `throw` at top level 3 times (uncaught → Node report + stack); `??` reversed (`a ?? \`${a}\n\`` → "undefined"); usage appended twice; read stdin twice (second read empty); discarded return value of `usageCliMessage`; `args[1].startsWith` on undefined; `&& isTTY` inverted the stdin+flags check.
+- Solved by: 3-channel diagram + `cat` experiments; `isTTY` = "what is fd 0 connected to", not "is there data"; early `return` for stdin; try/catch around statSync; "who will catch this?" rule; tracing each line.
+- Lesson: stdin (fd 0) is wired by the shell before the program starts; `isTTY` true means it's the keyboard, and reading would block, so with no text that's an error. Stdin is always data, never a path, and can be read only once. A function signals failure with `throw`; the top level is the last catcher, so there you `console.error` + `process.exit(1)` — before writing `throw`, ask "who catches this?". APIs that throw (statSync) need try/catch; option flags like `throwIfNoEntry` only cover one error code. Always guard `args[N]` before calling methods on it (TS types it as `string` without `noUncheckedIndexedAccess`).
+
 ## Where it lives in the repo
 
 - `src/labs/02/command-line.ts`, `src/types/cli-options.type.ts`, `src/models/*.ts`, `src/types/providers-params.types.ts`
@@ -93,5 +98,11 @@ Later notes: `providers-params.types.ts` imports `./ai-model-names.types` withou
 - TS — Indexed Access Types: https://www.typescriptlang.org/docs/handbook/2/indexed-access-types.html (official)
 - TS — Record: https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type (official)
 - Zod — Metadata: https://zod.dev/metadata ; Unions: https://zod.dev/api#unions (official)
+- Node — fs.statSync: https://nodejs.org/api/fs.html#fsstatsyncpath-options ; Stats.isFile: https://nodejs.org/api/fs.html#statsisfile (official)
+- Node — fs.readFileSync: https://nodejs.org/api/fs.html#fsreadfilesyncpath-options (official)
+- Node — tty isTTY: https://nodejs.org/api/tty.html#readstreamistty (official)
+- Node — Common system errors: https://nodejs.org/api/errors.html#common-system-errors (official)
+- TS — never: https://www.typescriptlang.org/docs/handbook/2/functions.html#never (official)
+- MDN — try...catch, String.trim, let: developer.mozilla.org/es (official)
 - Node — process.argv: https://nodejs.org/api/process.html#processargv (official)
 - commander.js README: https://github.com/tj/commander.js/blob/master/Readme.md (official) — explained, not used
