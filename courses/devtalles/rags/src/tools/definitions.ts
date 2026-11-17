@@ -37,7 +37,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
 		},
 	},
 	{
-		name: "read_file",
+		name: "read_files",
 		description:
 			"Lee el contenido completo de un archivo del proyecto. " +
 			"Útil para inspeccionar código fuente, configuración, o documentación. " +
