@@ -26,17 +26,17 @@ export const toolsSchema = z.object({
 			z
 				.literal("summary")
 				.describe(
-					"el agente debe devolver los tres puntos clave del texto proporcionado",
+					"El agente te va a devolver los 3 puntos clave del texto que le has proporcionado.",
 				),
 			z
 				.literal("category")
 				.describe(
-					"etiqueta un mensaje con una categoría (por ejemplo: ticket de soporte) sobre el tema del que va el texto dado",
+					"El agente te va a etiquetar el mensaje que le has enviado con una categoría a la que él considere que puede pertenecer",
 				),
 			z
 				.literal("extract")
 				.describe(
-					"devuelve un dato sobre el cual el usuario haya preguntado en un texto concreto (por ejemplo: un nombre, una fecha o un importe)",
+					"El agente te va a devolver un dato concreto sobre el texto que le hayas pasado (por ejemplo: un nombre, una fecha o un importe). Si no le dices que quieres que te de en el propio mensaje, te devolverá un dato aleatorio que él elija de ese texto.",
 				),
 		],
 		'unknown tool. only accept: "--summary", "--category" or "--extract" for now.',
