@@ -10,5 +10,6 @@ const providersParams = z.object({
 
 export type ProvidersParams = z.infer<typeof providersParams>;
 
-export const providers = z.literal(["openai", "anthropic", "vercel"]);
+// cambio de literal a enum para permitir el acceso restricgido o no, a proveedores con .extract o .exclude
+export const providers = z.enum(["openai", "anthropic", "vercel"]);
 export type Providers = z.infer<typeof providers>;
