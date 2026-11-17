@@ -41,7 +41,7 @@ Explanations: normal (trainee level).
 
 Mentor scope (steps 1–4) finished 2026-11-17. Step 5+ are user-solo: help only if asked.
 Next action if they come back: whatever they ask about steps 5–10. Don't drive.
-Open: user didn't answer about commit for steps 3–4. User removed `console.log(result.data)`; now prints `text` (temporary, step 6 replaces it). `--summary` alone in a real TTY not verified by mentor (no TTY in agent env) — user to check.
+Open: user declined mentor commit for steps 3–4 (2026-11-17); they commit themselves. User removed `console.log(result.data)`; now prints `text` (temporary, step 6 replaces it). `--summary` alone in a real TTY not verified by mentor (no TTY in agent env) — user to check.
 Minor (mentioned once): line ~197 ternary used as statement with assignments (`cond ? (a = 1) : (a = 2)`) — same lesson as step 2; `textArg` if/else could be a const ternary. Zod error path shows `→ at maxTokens`. `--help` output: leading blank line fixed? (`customMessage && ...` + join). Text typos in usage ("es la línea... es que", "respecticamente").
 Later notes: `providers-params.types.ts` imports `./ai-model-names.types` without `.ts` — fine for type-only, breaks at runtime. Design comment in command-line.ts still outdated (help at [0] wins; [1] optional → stdin; flags start at [1] when no text arg).
 
