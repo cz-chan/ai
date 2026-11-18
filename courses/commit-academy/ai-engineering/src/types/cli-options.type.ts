@@ -10,17 +10,22 @@ export const flagsSchema = z.object({
 			["fast", "chaos", "smart"],
 			'unknown model. only accept: "fast", "chaos" or "smart" for now.',
 		)
+		.describe("modelos que acepta el agente")
 		.default("fast"),
-	maxTokens: z.coerce
+	maxTokens: z.coerce // tiene que ser coerce porque en la linea de comandos todo es string (esto valida el number)
 		.number("--max-tokens must be a positive integer.")
 		.int()
 		.positive()
-		.default(256),
+		.default(256)
+		.describe(
+			"cantidad de tokens que, como máximo, va a usar el modelo en su respuesta",
+		),
 	provider: providers
 		.extract(
 			["anthropic", "openai", "vercel"],
 			'unknown provider. only accept "anthropic", "openai" or "vercel" for now.',
 		)
+		.describe("proveedores de ai que puedes usar")
 		.default("anthropic"),
 });
 
