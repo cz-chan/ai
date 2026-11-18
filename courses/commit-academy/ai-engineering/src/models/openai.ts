@@ -17,8 +17,11 @@ export async function useOpenai(
 		model: model,
 		max_completion_tokens: maxTokens,
 		messages: [
+			...(systemPrompt
+				? // sin as const TS dará error porqeu system lo toma como string y no como valor
+					[{ role: "system" as const, content: systemPrompt }]
+				: []),
 			{ role: "user", content: prompt },
-			{ role: "assistant", content: systemPrompt },
 		],
 	});
 
