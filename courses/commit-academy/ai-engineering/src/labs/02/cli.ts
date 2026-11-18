@@ -347,7 +347,7 @@ async function cliResponse(params: CLI): Promise<string> {
 
 			const message =
 				llmMessage.length !== 0
-					? llmMessage + messageOuputs
+					? llmMessage + messageOuputs + hint
 					: "{respuesta vacia}" + messageOuputs;
 
 			return message;
