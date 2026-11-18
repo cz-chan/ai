@@ -44,7 +44,7 @@ El comando para utilizarla se compone de las siguientes partes:
 Para poder usar el cli como mínimo se deben proporcionar los comandos obligatorios en el orden indicado, por ejemplo:
 
 ```shell
-pnpm lab:02 /Users/unuser/Desktop/projects/.../ai-engineering/src/labs/02/analisis.md --summary
+pnpm lab:02 --summary /Users/unuser/Desktop/projects/.../ai-engineering/src/labs/02/analisis.md
 ```
 
 En caso de querer usar los comandos opcionales, no existe un orden concreto pero sí una forma de llamarlos: el flag siempre debe ir precedido por '--' (un doble menos) y consecutivamente (con un espacio entre medias) el valor válido para ese flag. En caso de no ser correcto, saltará un error con el porqué y un mensaje de cómo usarlo.
@@ -52,11 +52,11 @@ En caso de querer usar los comandos opcionales, no existe un orden concreto pero
 Algunos ejemplos de estos comandos serían:
 
 ```shell
-pnpm lab:02 src/labs/02/analisis.md --category --model chaos --max-tokens 1024 --provider openai
+pnpm lab:02 --category src/labs/02/analisis.md --model chaos --max-tokens 1024 --provider openai
 ```
 
 ```shell
-pnpm lab:02 src/labs/02/analisis.md --category --provider vercel --max-tokens 100
+pnpm lab:02 --category src/labs/02/analisis.md  --provider vercel --max-tokens 100
 ```
 
 Y por último, el comando extra qeu te proporciona la ayuda sería:
