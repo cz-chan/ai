@@ -313,6 +313,7 @@ async function cliResponse(params: CLI): Promise<string> {
 	const { provider, tool, ...providerParams } = params;
 
 	const toolSystemPrompt = getSystemPrompt(tool);
+
 	const modelParams: ProvidersParams = {
 		...providerParams,
 		systemPrompt: toolSystemPrompt,
@@ -325,11 +326,10 @@ async function cliResponse(params: CLI): Promise<string> {
 
 	switch (provider) {
 		case "anthropic": {
-			const response = await useAnthropic({
-				...providerParams,
-				systemPrompt: toolSystemPrompt,
-			});
+			const response = await useAnthropic(modelParams);
 			const { content, stop_reason, usage } = response;
+
+			let hint = "";
 
 			const llmMessage = content
 				.filter((block) => block.type === "text")
@@ -337,13 +337,18 @@ async function cliResponse(params: CLI): Promise<string> {
 				.join("")
 				.trim();
 
+			const messageOuputs =
+				`\n\n[fin] ${stop_reason}` +
+				`\n[tokens] entrada=${usage.input_tokens} | salida=${usage.output_tokens}`;
+
+			if (stop_reason === "max_tokens") {
+				hint = `\nLa respuesta se ha cortado porque era demasiado larga y sobrepasaba los tokens permitidos: ${modelParams.maxTokens} tokens`;
+			}
+
 			const message =
-				llmMessage +
-					`\n\n[fin] ${stop_reason}` +
-					`\n[tokens] entrada=${usage.input_tokens} | salida=${usage.output_tokens}` ||
-				"{respuesta vacia}" +
-					`\n\n[fin] ${stop_reason}` +
-					`\n[tokens] entrada=${usage.input_tokens} | salida=${usage.output_tokens}`;
+				llmMessage.length !== 0
+					? llmMessage + messageOuputs
+					: "{respuesta vacia}" + messageOuputs;
 
 			return message;
 		}
@@ -352,30 +357,42 @@ async function cliResponse(params: CLI): Promise<string> {
 			const response = await useOpenai(modelParams);
 			const { choices, usage } = response;
 			const { finish_reason, message: modelMessage } = choices[0];
+			let hint = "";
 
 			const llmMessage = modelMessage.content;
 
+			if (finish_reason === "length") {
+				hint = `\nLa respuesta se ha cortado porque era demasiado larga y sobrepasaba los tokens permitidos: ${modelParams.maxTokens} tokens`;
+			}
+
+			const messageOutputs =
+				`\n\n[fin] ${finish_reason}` +
+				`\n[tokens] entrada=${usage?.prompt_tokens} | salida=${usage?.completion_tokens}`;
+
 			const message =
-				llmMessage +
-					`\n\n[fin] ${finish_reason}` +
-					`\n[tokens] entrada=${usage?.prompt_tokens} | salida=${usage?.completion_tokens}` ||
-				"{respuesta vacia}" +
-					`\n\n[fin] ${finish_reason}` +
-					`\n[tokens] entrada=${usage?.prompt_tokens} | salida=${usage?.completion_tokens}`;
+				llmMessage !== null
+					? llmMessage + messageOutputs + hint
+					: "{respuesta vacia}" + hint + messageOutputs;
 
 			return message;
 		}
 		case "vercel": {
 			const response = await useVercel(modelParams);
 			const { finishReason, text, usage } = response;
+			let hint = "";
+
+			const messageOutputs =
+				`\n\n[fin] ${finishReason}` +
+				`\n[tokens] entrada=${usage.inputTokens} | salida=${usage.outputTokens}`;
+
+			if (finishReason === "length") {
+				hint = `\nLa respuesta se ha cortado porque era demasiado larga y sobrepasaba los tokens permitidos: ${modelParams.maxTokens} tokens`;
+			}
 
 			const message =
-				text +
-					`\n\n[fin] ${finishReason}` +
-					`\n[tokens] entrada=${usage.inputTokens} | salida=${usage.outputTokens}` ||
-				"{respuesta vacia}" +
-					`\n\n[fin] ${finishReason}` +
-					`\n[tokens] entrada=${usage.inputTokens} | salida=${usage.outputTokens}`;
+				text.length !== 0
+					? text + messageOutputs + hint
+					: "{respuesta vacia}" + hint + messageOutputs;
 
 			return message;
 		}
