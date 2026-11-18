@@ -284,7 +284,19 @@ Configuración usada: tool `--extract` · provider `anthropic` · max-tokens `25
 | Largo (l) | `fast`  |      2147      |      238      |  end_return   |   2.613    |
 | Largo (l) | `smart` |      2147      |      239      |  end_return   |   4.304    |
 
-**Conclusión**: Un modelo más liviano como es `fast` consume prácticamente los mismos tokens pero a nivel de tiempo es ligeramente más rápido y a nivel de cómputo y coste, es mucho inferior, por lo que para tareas rápidas, que no requieren de un esfuerzo extra y no son críticas el mejor modelo es `fast`.
+**Conclusión**:
+
+Un modelo más liviano como es `fast` consume prácticamente los mismos tokens pero a nivel de tiempo es ligeramente más rápido (en la mayoría) y a nivel de cómputo y coste, es mucho inferior, por lo que para tareas rápidas, que no requieren de un esfuerzo extra y no son críticas el mejor modelo es `fast`.
+
+Revisando con claude este archivo, me ha dado un par de puntos de vista que no había tenido en cuenta:
+
+- Hay 4 elementos que se pueden tocar para reducir el coste:
+  1. número de llamadas -> ¿Hace falta llamar al modelo 10.000 veces?
+  2. tokens de entrada -> ¿Qué se repite en todas las llamadas?
+  3. tokens de salida -> ¿Cuánta respuesta necesitas de verdad?
+  4. precio -> ¿El modelo más caro aporta algo aquí? (esta sí la hanía tenido en cuenta)
+- Prompt Catching: cobran menos por la parte de la entrada que se repite
+- Batch API: procesas en lote, sin respuesta inmediata, reduce el precio
 
 ## Análisis
 
