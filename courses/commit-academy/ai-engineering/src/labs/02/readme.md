@@ -3,7 +3,7 @@
 Para poder usar este proyecto primero necesitas configurar el proyecto siguiendo estos pasos:
 
 1. Haz una copia de `.env.template` y renómbrala a `.env`.
-2. Añade los valores correspondientes de las variables de entorno (estarán en ...). Acuérdate que la versión de `PRACTICE_API_URL_ANTHROPIC=` no lleva al final el `/v1`. Si lo colocas no te funcionará.
+2. Añade los valores correspondientes de las variables de entorno (te las proporciona el curso en commitacademy.io). Acuérdate que la versión de `PRACTICE_API_URL_ANTHROPIC=` no lleva al final el `/v1`. Si lo colocas no te funcionará.
 3. Colócate en la carpeta del proyecto e instala las dependencias con `pnpm install`.
 4. Asegúrate de tener instalado `NodeJS` en tu ordenador (sin este, el programa no funciona)
 
@@ -21,8 +21,8 @@ El comando para utilizarla se compone de las siguientes partes:
 
 **Flags opcionales**:
 
-- `model`: serán los modelos que el usuario tiene disponivles para usar que en este caso son: fast, chaos y smart ya que embed y rerank para esta tool no tendrían sentido (hay un .extract con zod para filtrarlos)
-- `max-tokens`: es la cantidad de tokens que el modelo puede devolver. Por defecto está configurado en 256 pero el usuario puede manderle más o menos hasta un límite de 2056 toknes.
+- `model`: serán los modelos que el usuario tiene disponibles para usar que en este caso son: fast, chaos y smart ya que embed y rerank para esta tool no tendrían sentido (hay un .extract con zod para filtrarlos)
+- `max-tokens`: es la cantidad de tokens que el modelo puede devolver. Por defecto está configurado en 256 pero el usuario puede mandarle más o menos hasta un límite de 2056 tokens.
 - `provider`: son los proveedores disponibles que tengo configurados. Por defecto es anthropic pero además está vercel y openai.
 
 **Flag extra** y muy recomendado para saber cómo funciona:
@@ -49,7 +49,7 @@ pnpm lab:02 --category src/labs/02/analisis.md --model chaos --max-tokens 1024 -
 pnpm lab:02 --category src/labs/02/analisis.md  --provider vercel --max-tokens 100
 ```
 
-Y por último, el comando extra qeu te proporciona la ayuda sería:
+Y por último, el comando extra que te proporciona la ayuda sería:
 
 ```shell
 pnpm lab:02 --help

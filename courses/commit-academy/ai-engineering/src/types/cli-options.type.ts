@@ -16,6 +16,7 @@ export const flagsSchema = z.object({
 		.number("--max-tokens must be a positive integer.")
 		.int()
 		.positive()
+		.max(2056)
 		.default(256)
 		.describe(
 			"cantidad de tokens que, como máximo, va a usar el modelo en su respuesta",
