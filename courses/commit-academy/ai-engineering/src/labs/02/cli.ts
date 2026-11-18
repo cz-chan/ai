@@ -1,20 +1,21 @@
 import * as fs from "node:fs";
 import z from "zod";
 
-import { flagsSchema, cliArgsSchema } from "../../types/cli-options.type.ts";
-import type { ProvidersParams } from "../../types/providers-params.types.ts";
-import { usageCliMessage } from "./how-use-cli.ts";
-import { flagToKey, throwErrorMessage } from "./helpers.funct.ts";
-
-const SYSTEM_PROMPT =
-	"Resume textos. Devuelve exactamente 3 puntos clave, concisos, en español";
-
-const INSTRUCTIONS: ProvidersParams = {
-	model: "fast",
-	prompt: "",
-	maxTokens: 256,
-	systemPrompt: SYSTEM_PROMPT,
-};
+import {
+	flagsSchema,
+	cliArgsSchema,
+	type Tools,
+} from "../../types/cli-options.type.ts";
+import type {
+	Providers,
+	ProvidersParams,
+} from "../../types/providers-params.types.ts";
+import { throwErrorMessage, usageCliMessage } from "./how-use-cli.ts";
+import { flagToKey } from "./helpers.funct.ts";
+import { useAnthropic } from "../../models/anthropic.ts";
+import { useOpenai } from "../../models/openai.ts";
+import { useVercel } from "../../models/vercel.ts";
+import { getSystemPrompt } from "./tools/get-system-prompt.ts";
 
 /*
 	docs: https://nodejs.org/docs/latest/api/process.html#processargv
@@ -283,7 +284,7 @@ if (!result.success) {
 	process.exit(1);
 }
 
-let text: string;
+let text: string; // esto es el prompt que debe reciber el llm
 try {
 	text = readInput(textArg).trim();
 } catch (error) {
@@ -301,4 +302,99 @@ if (text === "") {
 	process.exit(1);
 }
 
-console.log(text);
+// interfaz que debe cumplir los parámetros que le llegan a cada response
+interface CLI extends ProvidersParams {
+	provider: Providers;
+	tool: Tools;
+}
+
+// función con la que se va a llamar a los distintos providers con sus respectivos parámetros
+async function cliResponse(params: CLI): Promise<string> {
+	const { provider, tool, ...providerParams } = params;
+
+	const toolSystemPrompt = getSystemPrompt(tool);
+	const modelParams: ProvidersParams = {
+		...providerParams,
+		systemPrompt: toolSystemPrompt,
+	};
+
+	// --provider elige el SDK y el endpoint del gateway (anthropic | openai | vercel).
+	// Cada uno devuelve una forma distinta (content[] / choices[0] / text), por eso hay un case por provider.
+	// Con el gateway del curso todos usan la misma API key; si en el futuro cada provider tuviera
+	// su propia key y sus modelos, solo habría que tocar src/models/*, no esta función.
+
+	switch (provider) {
+		case "anthropic": {
+			const response = await useAnthropic({
+				...providerParams,
+				systemPrompt: toolSystemPrompt,
+			});
+			const { content, stop_reason, usage } = response;
+
+			const llmMessage = content
+				.filter((block) => block.type === "text")
+				.map((block) => block.text)
+				.join("")
+				.trim();
+
+			const message =
+				llmMessage ||
+				"{respuesta vacia}" +
+					`\n\n[fin] ${stop_reason}` +
+					`\n[tokens] entrada=${usage.input_tokens} | salida=${usage.output_tokens}`;
+
+			return message;
+		}
+
+		case "openai": {
+			const response = await useOpenai(modelParams);
+			const { choices, usage } = response;
+			const { finish_reason, message: modelMessage } = choices[0];
+
+			const llmMessage = modelMessage.content;
+
+			const message =
+				llmMessage ||
+				"{respuesta vacia}" +
+					`\n\n[fin] ${finish_reason}` +
+					`\n[tokens] entrada=${usage?.prompt_tokens} | salida=${usage?.completion_tokens}`;
+
+			return message;
+		}
+		case "vercel": {
+			const response = await useVercel(modelParams);
+			const { finishReason, text, usage } = response;
+
+			const message =
+				text ||
+				"{respuesta vacia}" +
+					`\n\n[fin] ${finishReason}` +
+					`\n[tokens] entrada=${usage.inputTokens} | salida=${usage.outputTokens}`;
+
+			return message;
+		}
+
+		default: {
+			const unknownProvider: never = provider;
+			throw new Error(
+				`Provider desconocido: "${unknownProvider}". Puedes usar "openai", "anthropic" o "vercel"`,
+			);
+		}
+	}
+}
+
+const { maxTokens, model, provider, tool } = result.data;
+try {
+	console.log(
+		await cliResponse({
+			model: model,
+			prompt: text,
+			provider: provider,
+			maxTokens: maxTokens,
+			tool: { tool: tool },
+		}),
+	);
+} catch (error) {
+	console.error("[error]", error instanceof Error ? error.message : error);
+	process.exitCode = 1;
+}
