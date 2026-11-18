@@ -338,7 +338,9 @@ async function cliResponse(params: CLI): Promise<string> {
 				.trim();
 
 			const message =
-				llmMessage ||
+				llmMessage +
+					`\n\n[fin] ${stop_reason}` +
+					`\n[tokens] entrada=${usage.input_tokens} | salida=${usage.output_tokens}` ||
 				"{respuesta vacia}" +
 					`\n\n[fin] ${stop_reason}` +
 					`\n[tokens] entrada=${usage.input_tokens} | salida=${usage.output_tokens}`;
@@ -354,7 +356,9 @@ async function cliResponse(params: CLI): Promise<string> {
 			const llmMessage = modelMessage.content;
 
 			const message =
-				llmMessage ||
+				llmMessage +
+					`\n\n[fin] ${finish_reason}` +
+					`\n[tokens] entrada=${usage?.prompt_tokens} | salida=${usage?.completion_tokens}` ||
 				"{respuesta vacia}" +
 					`\n\n[fin] ${finish_reason}` +
 					`\n[tokens] entrada=${usage?.prompt_tokens} | salida=${usage?.completion_tokens}`;
@@ -366,7 +370,9 @@ async function cliResponse(params: CLI): Promise<string> {
 			const { finishReason, text, usage } = response;
 
 			const message =
-				text ||
+				text +
+					`\n\n[fin] ${finishReason}` +
+					`\n[tokens] entrada=${usage.inputTokens} | salida=${usage.outputTokens}` ||
 				"{respuesta vacia}" +
 					`\n\n[fin] ${finishReason}` +
 					`\n[tokens] entrada=${usage.inputTokens} | salida=${usage.outputTokens}`;
