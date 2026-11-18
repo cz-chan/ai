@@ -13,7 +13,7 @@ En este archivo tengo:
 Para poder usar este proyecto primero necesitas configurar el proyecto siguiendo estos pasos:
 
 1. Haz una copia de `.env.template` y renómbrala a `.env`.
-2. Añade los valores correspondientes de las variables de entorno (estarán en ...). Acuérdate que la versión de `PRACTICE_API_URL_ANTHROPIC=` no lleva al final el `/v1`. Si lo colocas no te funcionará.
+2. Añade los valores correspondientes de las variables de entorno (te las proporciona el curso en commitacademy.io). Acuérdate que la versión de `PRACTICE_API_URL_ANTHROPIC=` no lleva al final el `/v1`. Si lo colocas no te funcionará.
 3. Colócate en la carpeta del proyecto e instala las dependencias con `pnpm install`.
 4. Asegúrate de tener instalado `NodeJS` en tu ordenador (sin este, el programa no funciona)
 
@@ -31,8 +31,8 @@ El comando para utilizarla se compone de las siguientes partes:
 
 **Flags opcionales**:
 
-- `model`: serán los modelos que el usuario tiene disponivles para usar que en este caso son: fast, chaos y smart ya que embed y rerank para esta tool no tendrían sentido (hay un .extract con zod para filtrarlos)
-- `max-tokens`: es la cantidad de tokens que el modelo puede devolver. Por defecto está configurado en 256 pero el usuario puede manderle más o menos hasta un límite de 2056 toknes.
+- `model`: serán los modelos que el usuario tiene disponibles para usar que en este caso son: fast, chaos y smart ya que embed y rerank para esta tool no tendrían sentido (hay un .extract con zod para filtrarlos)
+- `max-tokens`: es la cantidad de tokens que el modelo puede devolver. Por defecto está configurado en 256 pero el usuario puede mandarle más o menos hasta un límite de 2056 tokens.
 - `provider`: son los proveedores disponibles que tengo configurados. Por defecto es anthropic pero además está vercel y openai.
 
 **Flag extra** y muy recomendado para saber cómo funciona:
@@ -59,7 +59,7 @@ pnpm lab:02 --category src/labs/02/analisis.md --model chaos --max-tokens 1024 -
 pnpm lab:02 --category src/labs/02/analisis.md  --provider vercel --max-tokens 100
 ```
 
-Y por último, el comando extra qeu te proporciona la ayuda sería:
+Y por último, el comando extra que te proporciona la ayuda sería:
 
 ```shell
 pnpm lab:02 --help
@@ -126,13 +126,13 @@ Los system prompts que le he pasado a los LLMs están dentro del esquema de zod:
 
 Todos los pantallazos están en la carpeta de `/assets/images/` y los texto (creados por claude) en `/assets/texts/`.
 
-Como los textos están siemrpe en esa ruta, las rutas para este lab son:
+Como los textos están siempre en esa ruta, las rutas para este lab son:
 
 - `src/labs/02/assets/texts/l-text.txt`
 - `src/labs/02/assets/texts/m-text.txt`
 - `src/labs/02/assets/texts/s-text.txt`
 
-- **Ejecicio 1**: Ejecutar la mini-app con cada texto y anotar en una tabla: tokens de entrada, tokens de salida y si el resultado es correcto
+- **Ejercicio 1**: Ejecutar la mini-app con cada texto y anotar en una tabla: tokens de entrada, tokens de salida y si el resultado es correcto
 
   Configuración usada: tool `--summary` · modelo `smart` · provider `openai` · max-tokens `256`
 
@@ -183,7 +183,7 @@ Como los textos están siemrpe en esa ruta, las rutas para este lab son:
     La respuesta se ha cortado porque era demasiado larga y sobrepasaba los tokens permitidos: 256 tokens
     ```
 
-  **Insigt**: El modelo, aunque más intelegente, comete el fallo inicial de empezar en inglés. Al parecer este "comienzo creativo" lo hace por defecto la AI pero cuando "se acuerda" que el system prompt pone que responda en el mismo idioma en el que el usuario le ha pasado el mensaje y la tarea que tiene que hacer, se acuerda y responde correctamente. En comparación al modelo fast
+  **Insight**: El modelo, aunque más inteligente, comete el fallo inicial de empezar en inglés. Al parecer este "comienzo creativo" lo hace por defecto la AI pero cuando "se acuerda" que el system prompt pone que responda en el mismo idioma en el que el usuario le ha pasado el mensaje y la tarea que tiene que hacer, se acuerda y responde correctamente.
 
   Configuración usada: tool `--category` · modelo `fast` · provider `anthropic` · max-tokens `256`
 
@@ -198,7 +198,7 @@ Como los textos están siemrpe en esa ruta, las rutas para este lab son:
   - M: La categoría del texto es: **Educativo/Informativo** porque presenta información detallada sobre los beneficios del running, consejos prácticos para iniciarse y recomendaciones sobre entrenamiento, descanso y nutrición, con el propósito de instruir y orientar al lector.
   - L: La categoría del texto es: **Ensayo educativo-informativo** porque presenta un análisis profundo y bien argumentado sobre la lectura, combinando perspectiva histórica, datos científicos, beneficios comprobados y reflexión crítica sobre su estado actual, con el propósito de informar y reflexionar sobre el tema.
 
-  **Insigt**: aunque el modelo era el mismo y el system prompt no ha cambiado, la primera respuesta tiene una parte en inglés que parece ser la "creatividad" del propio modelo pero una vez que ha seguido el prompt, lo ha respondido todo en español. Esto solo ha pasado en la primera respuesta, después he vuelto a correr `pnpm lab:02 --category src/labs/02/assets/texts/s-text.txt` y no se ha dado ese error.
+  **Insight**: aunque el modelo era el mismo y el system prompt no ha cambiado, la primera respuesta tiene una parte en inglés que parece ser la "creatividad" del propio modelo pero una vez que ha seguido el prompt, lo ha respondido todo en español. Esto solo ha pasado en la primera respuesta, después he vuelto a correr `pnpm lab:02 --category src/labs/02/assets/texts/s-text.txt` y no se ha dado ese error.
 
 - **Ejercicio 2**: Ejecutar dos veces más el texto medio y anotar si el resultado cambia
 
@@ -243,7 +243,7 @@ Como los textos están siemrpe en esa ruta, las rutas para este lab son:
     La respuesta se ha cortado porque era demasiado larga y sobrepasaba los tokens permitidos: 256 tokens
     ```
 
-    **Insights**: Con el modelo `smart` el agente se ciñe a los 256 tokens de salida y completa la tarea en los casos en los que lo he lanzado mientras que usando el modelo `smart` en ninguno de los casos la ha pasado porque ha superado al cantidad máxima de tokens que tiene el modelo de output por defecto (esto se lo puse yo)
+    **Insights**: Con el modelo `smart` el agente se ciñe a los 256 tokens de salida y completa la tarea en los casos en los que lo he lanzado mientras que usando el modelo `fast` en ninguno de los casos la ha pasado porque ha superado al cantidad máxima de tokens que tiene el modelo de output por defecto (esto se lo puse yo)
 
 - **Capturas de pantalla de la terminal**:
   1. Ejecución con el texto como argumento:
@@ -262,8 +262,8 @@ Como los textos están siemrpe en esa ruta, las rutas para este lab son:
 
      ![parada-por-length](assets/images/parada-por-length.png)
 
-- **Otros insigts**:
-  1. Aunque el modelo lea la tool y su descripción y le diga que escriba en el idioma del texto que está analizando, en ocasiones falla y responde en español. Pero esto se peude dar porque el system prompt está en inglés o porque no lo revisa y responde con el idioma por defecto que tiene el modelo.
+- **Otros insights**:
+  1. Aunque el modelo lea la tool y su descripción y le diga que escriba en el idioma del texto que está analizando, en ocasiones falla y responde en inglés. Pero esto se puede dar porque el system prompt está en inglés o porque no lo revisa y responde con el idioma por defecto que tiene el modelo.
 
      ![error-en-idioma-aunque-lea-system](assets/images/error-en-idioma-aunque-lea-system.png)
 
@@ -294,25 +294,25 @@ Revisando con claude este archivo, me ha dado un par de puntos de vista que no h
   1. número de llamadas -> ¿Hace falta llamar al modelo 10.000 veces?
   2. tokens de entrada -> ¿Qué se repite en todas las llamadas?
   3. tokens de salida -> ¿Cuánta respuesta necesitas de verdad?
-  4. precio -> ¿El modelo más caro aporta algo aquí? (esta sí la hanía tenido en cuenta)
-- Prompt Catching: cobran menos por la parte de la entrada que se repite
+  4. precio -> ¿El modelo más caro aporta algo aquí? (esta sí la había tenido en cuenta)
+- Prompt Caching: cobran menos por la parte de la entrada que se repite
 - Batch API: procesas en lote, sin respuesta inmediata, reduce el precio
 
 ## Análisis
 
 - **Tokens**:
 
-  El consumo de tokens crece proporcionalmente con la longitud del texto ya que el consumo de tokens suma tanto los tokens de entrada como los de salidad (los de 'thinking' cuentan como precio de salida). A más texto, aunque la salida sea una única palabra, consume más ya que tiene que analizarlo completamente.
+  El consumo de tokens crece proporcionalmente con la longitud del texto ya que el consumo de tokens suma tanto los tokens de entrada como los de salida (los de 'thinking' cuentan como precio de salida). A más texto, aunque la salida sea una única palabra, consume más ya que tiene que analizarlo completamente.
 
-  Como usuario puedo controlar el input (qué tan largo es el texto que le envío aunque cuanto más corto y más resumido sea, menos contexto podría llegar a tener) y el output. Aunque este último puedo controlarlo en parte ya que puedo controlar el máximo que quiero que tenga (aunque no me asegura que la respuesta esté completa) pero no el mínimo. Lo ideal poder tener un equilibrio entre la calidad de la respuesta y la cantidad de tokens de output dados, intentando buscar siempre la máxima calidad y accuracy con la manor cantidad de consumo de tokens posible.
+  Como usuario puedo controlar el input (qué tan largo es el texto que le envío aunque cuanto más corto y más resumido sea, menos contexto podría llegar a tener) y el output. Aunque este último puedo controlarlo en parte ya que puedo controlar el máximo que quiero que tenga (aunque no me asegura que la respuesta esté completa) pero no el mínimo. Lo ideal poder tener un equilibrio entre la calidad de la respuesta y la cantidad de tokens de output dados, intentando buscar siempre la máxima calidad y accuracy con la menor cantidad de consumo de tokens posible.
 
 - **Variabilidad**:
 
   Cambia la cantidad y la forma en la que se da el resultado pero no el resultado en sí mismo. En todos los casos, haya llegado o no al límite, el resultado es correcto y cumple la tarea (simple) que se le asigna pero al no tener en el contexto qué cantidad de tokens debe usar, simplemente escupe tokens hasta que la completa o llega al límite.
 
-  Como mejora en los system prompts colocaría la directriz de `Always answer in the same language as the message the user sent you.` al inicio de los system prompts y no al final ya que en ocasiones me responde en inglés (parece que tiene una pequeña ventana de creatividad hasta que tiene que llega a lo que el usuairo le ha pedido) y cuando va a resolver la tarea responde siempre en ese idioma.
+  Como mejora en los system prompts colocaría la directriz de `Always answer in the same language as the message the user sent you.` al inicio de los system prompts y no al final ya que en ocasiones me responde en inglés (parece que tiene una pequeña ventana de creatividad hasta que tiene que llega a lo que el usuario le ha pedido) y cuando va a resolver la tarea responde siempre en ese idioma.
 
-  Otra de las mejoras sería poder introducir en el syste prompt la cantidad de tokens que debe usar el modelo en la respuesta. Y aunque puede que no siempre la cumpla o no sepa medirlo, será mucho mejor y más acertado que no pasárselo.
+  Otra de las mejoras sería poder introducir en el system prompt la cantidad de tokens que debe usar el modelo en la respuesta. Y aunque puede que no siempre la cumpla o no sepa medirlo, será mucho mejor y más acertado que no pasárselo.
 
 - **Trade-offs**:
 
