@@ -11,12 +11,15 @@ const client = new OpenAI({
 export async function useOpenai(
 	params: ProvidersParams,
 ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
-	const { model, prompt, maxTokens } = params;
+	const { model, prompt, maxTokens, systemPrompt } = params;
 
 	const response = await client.chat.completions.create({
 		model: model,
 		max_completion_tokens: maxTokens,
-		messages: [{ role: "user", content: prompt }],
+		messages: [
+			{ role: "user", content: prompt },
+			{ role: "assistant", content: systemPrompt },
+		],
 	});
 
 	return response;
