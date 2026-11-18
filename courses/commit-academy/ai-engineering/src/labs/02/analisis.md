@@ -189,9 +189,9 @@ Como los textos están siemrpe en esa ruta, las rutas para este lab son:
 
   | Texto     | Tokens entrada | Tokens salida | Motivo de fin | ¿Correcto? |
   | --------- | :------------: | :-----------: | :-----------: | :--------: |
-  | Corto (s) |      303       |      45       |  end_return   |     ✅     |
-  | Medio (m) |      821       |      73       |  end_return   |     ✅     |
-  | Largo (l) |      1881      |      79       |  end_return   |     ✅     |
+  | Corto (s) |      303       |      45       |   end_turn    |     ✅     |
+  | Medio (m) |      821       |      73       |   end_turn    |     ✅     |
+  | Largo (l) |      1881      |      79       |   end_turn    |     ✅     |
 
   Respuestas según Texto:
   - S: The text category is: **Receta culinaria** porque describe detalladamente los ingredientes y el procedimiento paso a paso para elaborar un plato típico de la cocina española.
@@ -277,12 +277,12 @@ Configuración usada: tool `--extract` · provider `anthropic` · max-tokens `25
 
 | Texto     | Modelo  | Tokens entrada | Tokens salida | Motivo de fin | Tiempo (s) |
 | --------- | ------- | :------------: | :-----------: | :-----------: | :--------: |
-| Corto (s) | `fast`  |      569       |      179      |  end_return   |   3.852    |
-| Corto (s) | `smart` |      569       |      143      |  end_return   |   3.466    |
-| Medio (m) | `fast`  |      1087      |      186      |  end_return   |   2.034    |
-| Medio (m) | `smart` |      1087      |      218      |  end_return   |   3.840    |
-| Largo (l) | `fast`  |      2147      |      238      |  end_return   |   2.613    |
-| Largo (l) | `smart` |      2147      |      239      |  end_return   |   4.304    |
+| Corto (s) | `fast`  |      569       |      179      |   end_turn    |   3.852    |
+| Corto (s) | `smart` |      569       |      143      |   end_turn    |   3.466    |
+| Medio (m) | `fast`  |      1087      |      186      |   end_turn    |   2.034    |
+| Medio (m) | `smart` |      1087      |      218      |   end_turn    |   3.840    |
+| Largo (l) | `fast`  |      2147      |      238      |   end_turn    |   2.613    |
+| Largo (l) | `smart` |      2147      |      239      |   end_turn    |   4.304    |
 
 **Conclusión**:
 
