@@ -5,7 +5,7 @@ import {
 	flagsSchema,
 	cliArgsSchema,
 	type Tools,
-} from "../../types/cli-options.type.ts";
+} from "../../types/cli-options.types.ts";
 import type {
 	Providers,
 	ProvidersParams,

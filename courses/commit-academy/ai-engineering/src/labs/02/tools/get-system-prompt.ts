@@ -1,4 +1,4 @@
-import { toolsSchema, type Tools } from "../../../types/cli-options.type.ts";
+import { toolsSchema, type Tools } from "../../../types/cli-options.types.ts";
 
 export const getSystemPrompt = (option: Tools): string => {
 	// uso el find para devolve la primera coincidencia en ser true (que toolName incluya lo que pasa el usuario)

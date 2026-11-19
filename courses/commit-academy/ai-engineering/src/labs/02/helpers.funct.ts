@@ -1,5 +1,5 @@
 import z from "zod";
-import { flagsSchema, toolsSchema } from "../../types/cli-options.type.ts";
+import { flagsSchema, toolsSchema } from "../../types/cli-options.types.ts";
 
 // necesito esta función para transformar los flags al tipo de dato que me hacen falta en mi schema
 export function flagToKey(flag: string): string {
