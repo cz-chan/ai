@@ -2,6 +2,12 @@ import OpenAI from "openai";
 import { envs } from "../config/envs.ts";
 import type { ProvidersParams } from "../types/providers-params.types.ts";
 
+/*
+	! he hecho un cambio de la vieja api COMPLETIONS a la nueva: RESPONSES con tal de cumplir
+	! los estándares y las concenciones de openai, y por ende, de casi todos los proveedores
+	! y SDKs
+*/
+
 const client = new OpenAI({
 	baseURL: envs.PRACTICE_API_URL_OPENAI,
 	apiKey: envs.PRACTICE_API_KEY,
@@ -10,22 +16,40 @@ const client = new OpenAI({
 // openai docs: https://developers.openai.com/api/docs
 export async function useOpenai(
 	params: ProvidersParams,
-): Promise<OpenAI.Chat.Completions.ChatCompletion> {
+): Promise<OpenAI.Responses.Response> {
 	const { model, prompt, maxTokens, systemPrompt } = params;
 
-	const response = await client.chat.completions.create({
+	const response = await client.responses.create({
 		model: model,
-		max_completion_tokens: maxTokens,
-		messages: [
-			...(systemPrompt
-				? // sin as const TS dará error porqeu system lo toma como string y no como valor
-					[{ role: "system" as const, content: systemPrompt }]
-				: []),
-			{ role: "user", content: prompt },
-		],
+		max_output_tokens: maxTokens,
+		input: [{ role: "user", content: prompt }],
+		...(systemPrompt && { instructions: systemPrompt }),
 	});
 
 	return response;
+	/*
+	! antigua api
+	
+	 export async function useOpenai(
+	 	params: ProvidersParams,
+	 ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
+	 	const { model, prompt, maxTokens, systemPrompt } = params;
+	
+	 	const response = await client.chat.completions.create({
+	 		model: model,
+	 		max_completion_tokens: maxTokens,
+	 		messages: [
+	 			...(systemPrompt
+	 				? // sin as const TS dará error porqeu system lo toma como string y no como valor
+						[{ role: "system" as const, content: systemPrompt }]
+					: []),
+				{ role: "user", content: prompt },
+			],
+		});
+	
+		return response;
+	
+	*/
 	/*
 		el formato de openai es algo como:
 			{
