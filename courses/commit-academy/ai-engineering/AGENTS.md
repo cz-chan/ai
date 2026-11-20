@@ -18,6 +18,7 @@ Package manager: pnpm. Scripts run TS directly with Node's native type stripping
 - `pnpm test:openai` / `test:anthropic` / `test:vercel` — run a provider module directly (only does something if its trailing `console.log` block is uncommented)
 - `pnpm dev` / `pnpm build` (`tsc && vite build`) / `pnpm preview` — Vite browser shell (`index.html` → `src/index.ts`, currently empty)
 - Typecheck: `pnpm exec tsc` (`noEmit`; `noUnusedLocals`/`noUnusedParameters` on)
+- The agent has not access to make commits. Only the user could do them.
 
 No test framework or linter configured.
 
