@@ -12,7 +12,7 @@
 		"test:vercel": "node --env-file=.env src/models/vercel.ts",
 		"lab:01": "node --env-file=.env src/labs/01/llm-call.ts",
 		"lab:02": "node --env-file=.env src/labs/02/cli.ts",
-		"lab:03": "node --env-file=.env src/labs/03/openai.hardcall.ts"
+		"lab:03": "node --env-file=.env src/labs/03/openai.securecall.ts"
 	},
 	"devDependencies": {
 		"@types/node": "26.6.6",
