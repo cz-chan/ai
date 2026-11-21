@@ -108,36 +108,47 @@ async function useOpenai(
 	return response;
 }
 
-const chaos_input: ProvidersParams = {
-	model: useChaos,
+const PROMPTS = {
 	systemPrompt: LAB03_SYSTEM_PROMPT,
 	prompt: LAB03_PROMPT,
-	maxTokens: 200,
+	maxTokens: 400,
+};
+
+const chaos_input: ProvidersParams = {
+	...PROMPTS,
+	model: useChaos,
 };
 
 const fast_input: ProvidersParams = {
-	...chaos_input,
+	...PROMPTS,
 	model: useFast,
 };
 
 try {
-	const message = await withRetries(
+	const response = await withRetries(
 		() =>
 			// recibe 3 parámetros, el obligatorio es fast_input o chaous_input (dependiendo del modelo que quieras)
+			// los dos siguientes son opcionales y corresponden a emptyMessage y timeoutMs respectivamente
 			useOpenai(
-				fast_input,
+				{ ...fast_input, maxTokens: 10 },
 				// true,
 				//{
 				// 	timeoutMs: 1000,
 				// }
 			),
-		{
-			maxAttempts: 4,
-		},
+		// {
+		// 	maxAttempts: 4,
+		// },
 	);
-	// const message = await useOpenai(chaos_input, { timeoutMs: 1000 });
 
-	console.log(message);
+	const message = response.choices[0].message.content;
+	let theFinish = "";
+	if (response.choices[0].finish_reason === "length") {
+		theFinish = response.choices[0].finish_reason;
+	}
+
+	theFinish.length > 0 && console.log(`\n[finish reasson] ${theFinish}\n`);
+	console.log(`\nmessage:\n\n`, message);
 } catch (error) {
 	console.error(
 		"[error]",
