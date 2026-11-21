@@ -63,12 +63,19 @@ const client = new OpenAI({
 		emptyMessage: false por defecto -> fuerza el error del mensaje vacio con el modelo fast si es true
 		requestOptions: modifica el timeout que tarda en hacer la petición al servidor (por defecto 3000ms)
 */
+
+type OptionsLab03 = {
+	emptyMessage?: boolean;
+	requestOptions?: RequestOpt;
+};
+
 async function useOpenai(
 	params: ProvidersParams,
-	emptyMessage?: boolean,
-	requestOptions?: Partial<RequestOpt>,
+	options: OptionsLab03 = {},
 ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
 	const { model, prompt, maxTokens, systemPrompt } = params;
+	const { emptyMessage, requestOptions } = options;
+
 	const { timeoutMs } = requestOpt.parse(requestOptions);
 
 	const response = await client.chat.completions.create(
@@ -111,7 +118,7 @@ async function useOpenai(
 const PROMPTS = {
 	systemPrompt: LAB03_SYSTEM_PROMPT,
 	prompt: LAB03_PROMPT,
-	maxTokens: 400,
+	maxTokens: 256,
 };
 
 const chaos_input: ProvidersParams = {
@@ -129,13 +136,7 @@ try {
 		() =>
 			// recibe 3 parámetros, el obligatorio es fast_input o chaous_input (dependiendo del modelo que quieras)
 			// los dos siguientes son opcionales y corresponden a emptyMessage y timeoutMs respectivamente
-			useOpenai(
-				{ ...fast_input, maxTokens: 10 },
-				// true,
-				//{
-				// 	timeoutMs: 1000,
-				// }
-			),
+			useOpenai({ ...fast_input }, { requestOptions: { timeoutMs: 1 } }),
 		// {
 		// 	maxAttempts: 4,
 		// },
